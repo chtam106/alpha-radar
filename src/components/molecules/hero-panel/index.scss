@@ -1,0 +1,26 @@
+.c-hero-panel {
+  position: relative;
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  overflow: hidden;
+  padding: 36px;
+  border: 1px solid rgb(156 245 196 / 12%);
+  background: linear-gradient(110deg, rgb(20 39 32 / 96%), rgb(17 24 32 / 96%) 70%), #111820;
+
+  &__copy {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+  }
+
+  &__symbol {
+    position: absolute;
+    right: 42px;
+    color: rgb(156 245 196 / 8%);
+    font-size: clamp(180px, 30vw, 320px);
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+  }
+}

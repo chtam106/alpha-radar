@@ -1,0 +1,49 @@
+.o-crypto-dashboard {
+  padding-top: 24px;
+  padding-bottom: 32px;
+
+  &__main {
+    padding: 54px 0 48px;
+  }
+
+  &__heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 18px;
+    border-top: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  @media (width <= 720px) {
+    &__main {
+      padding-top: 36px;
+    }
+
+    &__heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    &__grid {
+      grid-template-columns: 1fr;
+    }
+
+    &__footer {
+      flex-direction: column;
+      gap: 6px;
+    }
+  }
+}

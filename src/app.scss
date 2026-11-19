@@ -1,0 +1,7 @@
+$app-background: #090d12;
+
+.o-app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 14% 0%, rgb(38 89 66 / 18%), transparent 34rem), $app-background;
+}
