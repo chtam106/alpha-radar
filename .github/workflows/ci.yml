@@ -1,0 +1,161 @@
+name: ci
+
+on:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  changes:
+    name: detect changed files
+    runs-on: ubuntu-latest
+    outputs:
+      typecheck: ${{ steps.filter.outputs.typecheck }}
+      eslint: ${{ steps.filter.outputs.eslint }}
+      stylelint: ${{ steps.filter.outputs.stylelint }}
+      prettier: ${{ steps.filter.outputs.prettier }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Filter changed files
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            typecheck:
+              - 'src/**/*.ts'
+              - 'src/**/*.tsx'
+              - '.storybook/**/*.ts'
+              - '.storybook/**/*.tsx'
+              - 'tsconfig*.json'
+              - 'vite.config.ts'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            eslint:
+              - 'src/**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}'
+              - '.storybook/**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}'
+              - '*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            stylelint:
+              - 'src/**/*.scss'
+              - 'stylelint.config.js'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            prettier:
+              - '**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,scss,md,yaml,yml,json,html}'
+
+  typecheck:
+    name: TypeScript
+    needs: changes
+    if: needs.changes.outputs.typecheck == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.9.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts --config.strict-dep-builds=false
+
+      - name: Run TypeScript
+        run: pnpm run typecheck
+
+  eslint:
+    name: ESLint
+    needs: changes
+    if: needs.changes.outputs.eslint == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.9.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts --config.strict-dep-builds=false
+
+      - name: Run ESLint
+        run: pnpm run lint
+
+  stylelint:
+    name: Stylelint
+    needs: changes
+    if: needs.changes.outputs.stylelint == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.9.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts --config.strict-dep-builds=false
+
+      - name: Run Stylelint
+        run: pnpm run lint:style
+
+  prettier:
+    name: Prettier
+    needs: changes
+    if: needs.changes.outputs.prettier == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.9.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts --config.strict-dep-builds=false
+
+      - name: Check formatting
+        run: pnpm run format:check

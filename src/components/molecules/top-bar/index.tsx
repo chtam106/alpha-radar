@@ -1,5 +1,5 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import { BrandMark } from '../../atoms/brand-mark';
+import { BrandMark } from '@/components/atoms/brand-mark';
 
 export function TopBar() {
   return (

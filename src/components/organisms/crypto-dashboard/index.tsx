@@ -2,10 +2,10 @@ import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalance
 import ShowChartRoundedIcon from '@mui/icons-material/ShowChartRounded';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
 import { Box, Container, Stack, Typography } from '@mui/material';
-import { DataSourceStatus } from '../../atoms/data-source-status';
-import { HeroPanel } from '../../molecules/hero-panel';
-import { TopBar } from '../../molecules/top-bar';
-import { WorkspaceFeatureCard } from '../../molecules/workspace-feature-card';
+import { DataSourceStatus } from '@/components/atoms/data-source-status';
+import { HeroPanel } from '@/components/molecules/hero-panel';
+import { TopBar } from '@/components/molecules/top-bar';
+import { WorkspaceFeatureCard } from '@/components/molecules/workspace-feature-card';
 
 const workspaceFeatures = [
   {
