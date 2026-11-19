@@ -1,27 +1,17 @@
 # Crypto Desk
 
-A React and TypeScript starter for a crypto market dashboard. The initial screen
-is a UI shell only: no market prices, wallet balances, or external data sources
-are configured.
-
-## Requirements
-
-- Node.js 24.21.0
-- pnpm 12.9.1
+A React and TypeScript workspace scaffold for a cryptocurrency market dashboard.
 
 ## Development
 
-```sh
+```powershell
 pnpm install
 pnpm dev
 ```
 
-## Checks
+## Validation
 
-```sh
-pnpm run check
-pnpm run build
-pnpm run preview
+```powershell
+pnpm check
+pnpm build
 ```
-
-The project uses Vite, Material UI, ESLint, Stylelint, and Prettier.
