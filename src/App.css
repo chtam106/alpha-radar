@@ -1,0 +1,153 @@
+.app-shell {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 14% 0%, rgb(38 89 66 / 18%), transparent 34rem), #090d12;
+}
+
+.app-content {
+  padding-top: 24px;
+  padding-bottom: 32px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0 24px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+
+.brand-mark,
+.feature-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #9cf5c4;
+  background: rgb(156 245 196 / 10%);
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgb(156 245 196 / 18%);
+  border-radius: 14px;
+}
+
+.dashboard-content {
+  padding: 54px 0 48px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.data-status {
+  flex: 0 0 auto;
+  margin-bottom: 5px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e7b66c;
+}
+
+.hero-panel {
+  position: relative;
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  overflow: hidden;
+  padding: 36px;
+  border: 1px solid rgb(156 245 196 / 12%);
+  background: linear-gradient(110deg, rgb(20 39 32 / 96%), rgb(17 24 32 / 96%) 70%), #111820;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+}
+
+.hero-symbol {
+  position: absolute;
+  right: 42px;
+  color: rgb(156 245 196 / 8%);
+  font-size: clamp(180px, 30vw, 320px);
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.feature-card {
+  min-height: 205px;
+  padding: 22px;
+  border: 1px solid rgb(255 255 255 / 8%);
+}
+
+.feature-icon {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 18px;
+  border-radius: 12px;
+}
+
+.module-status {
+  margin-top: 20px;
+  color: #8996a3;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.app-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 18px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+
+@media (width <= 720px) {
+  .dashboard-content {
+    padding-top: 36px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero-panel {
+    min-height: 190px;
+    padding: 26px;
+  }
+
+  .hero-symbol {
+    right: 16px;
+    opacity: 0.65;
+  }
+
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card {
+    min-height: auto;
+  }
+
+  .app-footer {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
