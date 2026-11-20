@@ -4,8 +4,8 @@
   height: 42px;
   flex: 0 0 auto;
   place-items: center;
-  color: #9cf5c4;
-  border: 1px solid rgb(156 245 196 / 18%);
+  color: var(--app-accent);
+  border: 1px solid var(--app-accent-border);
   border-radius: 14px;
-  background: rgb(156 245 196 / 10%);
+  background: var(--app-accent-soft);
 }

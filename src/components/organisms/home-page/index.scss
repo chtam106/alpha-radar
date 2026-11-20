@@ -1,0 +1,35 @@
+.o-home-page {
+  padding-top: 32px;
+  padding-bottom: 40px;
+
+  &__main {
+    padding: 72px 0;
+  }
+
+  &__intro {
+    max-width: 720px;
+  }
+
+  &__dashboard-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 28px;
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 18px;
+    background: #181a20;
+  }
+
+  @media (width <= 600px) {
+    &__main {
+      padding-top: 48px;
+    }
+
+    &__dashboard-card {
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 22px;
+    }
+  }
+}

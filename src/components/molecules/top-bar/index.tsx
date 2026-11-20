@@ -8,14 +8,14 @@ export function TopBar() {
         <BrandMark />
         <Box>
           <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-            Crypto Desk
+            Alpha Watch
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Personal market workspace
+            BNB Smart Chain
           </Typography>
         </Box>
       </Stack>
-      <Chip size="small" variant="outlined" label="STARTER PROJECT" />
+      <Chip size="small" variant="outlined" label="BINANCE ALPHA" />
     </Box>
   );
 }

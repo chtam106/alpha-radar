@@ -1,5 +1,7 @@
+import { ThemeProvider } from '@mui/material';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CryptoDashboard } from './index';
+import { appTheme } from '@/theme';
 
 const meta = {
   title: 'Organisms/Crypto Dashboard',
@@ -14,4 +16,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  render: () => (
+    <ThemeProvider theme={appTheme}>
+      <CryptoDashboard />
+    </ThemeProvider>
+  )
+};

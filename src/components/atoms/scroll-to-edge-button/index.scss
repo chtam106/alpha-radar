@@ -1,0 +1,15 @@
+.a-scroll-to-edge-button {
+  position: fixed;
+  z-index: 1300;
+  right: 24px;
+  bottom: 24px;
+
+  @media (width <= 600px) {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  &__fab {
+    box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
+  }
+}
