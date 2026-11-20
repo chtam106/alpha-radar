@@ -56,9 +56,14 @@ export function ScrollToEdgeButton() {
       <Fab
         aria-label={scrollDirection === 'up' ? 'Scroll to top' : 'Scroll to bottom'}
         className="a-scroll-to-edge-button__fab"
-        color="primary"
+        color="default"
         onClick={scrollToOppositeEdge}
         size="medium"
+        sx={{
+          color: '#f2f5f7',
+          backgroundColor: '#343a40',
+          '&:hover': { backgroundColor: '#454c54' }
+        }}
         title={scrollDirection === 'up' ? 'Scroll to top' : 'Scroll to bottom'}
       >
         {scrollDirection === 'up' ? (
