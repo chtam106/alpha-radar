@@ -98,6 +98,16 @@ export function CryptoDashboard() {
   const { field: sortField, direction: sortDirection } = sortPreference;
   const navigate = useNavigate();
 
+  function openTokenChart(futuresSymbol: string) {
+    const chartPath = `/chart/${encodeURIComponent(futuresSymbol)}`;
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      window.open(chartPath, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    navigate(chartPath);
+  }
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -290,13 +300,11 @@ export function CryptoDashboard() {
                         tabIndex={0}
                         aria-label={`View ${token.futuresSymbol} chart`}
                         className="o-crypto-dashboard__token-row"
-                        onClick={() =>
-                          navigate(`/chart/${encodeURIComponent(token.futuresSymbol)}`)
-                        }
+                        onClick={() => openTokenChart(token.futuresSymbol)}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            navigate(`/chart/${encodeURIComponent(token.futuresSymbol)}`);
+                            openTokenChart(token.futuresSymbol);
                           }
                         }}
                       >
