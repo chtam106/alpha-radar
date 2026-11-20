@@ -1,0 +1,62 @@
+.o-watchlist-page {
+  padding-top: 24px;
+  padding-bottom: 32px;
+
+  &__main {
+    padding: 48px 0 36px;
+  }
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  &__title {
+    margin-bottom: 8px;
+  }
+
+  &__refresh,
+  &__browse-button {
+    border-color: var(--app-accent-border);
+    color: var(--app-accent);
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  &__list-panel {
+    overflow: visible;
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 18px;
+    background: #181a20;
+  }
+
+  &__state,
+  &__empty {
+    display: flex;
+    min-height: 240px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 18px;
+    background: #181a20;
+    text-align: center;
+  }
+
+  @media (width <= 600px) {
+    padding-top: 16px;
+
+    &__main {
+      padding-top: 32px;
+    }
+
+    &__heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+}

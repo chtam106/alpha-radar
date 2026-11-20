@@ -19,6 +19,7 @@ import {
 import { CandlestickSeries, ColorType, createChart, HistogramSeries } from 'lightweight-charts';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokenMetrics, type BscAlphaTokenMetrics } from '@/services/binance-alpha';
 import {
   fetchBinanceFuturesCandles,
@@ -82,6 +83,16 @@ function formatMetric(value: number | null, formatter: Intl.NumberFormat): strin
   return value === null ? 'No data' : formatter.format(value);
 }
 
+function getCoinMarketCapUrl(name: string | null, symbol: string): string {
+  const baseAsset = symbol.replace(/(?:USDT|USDC)$/, '');
+  const slug =
+    (name ?? baseAsset)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || baseAsset.toLowerCase();
+  return `https://coinmarketcap.com/currencies/${slug}/`;
+}
+
 function formatUtcDate(time: number): string {
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
@@ -109,8 +120,9 @@ export function CoinChartPage() {
   const { symbol: routeSymbol = '' } = useParams();
   const symbol = routeSymbol.toUpperCase();
   const navigate = useNavigate();
+  const { isWatchlisted, toggleWatchlist } = useWatchlist();
   const [interval, setInterval] = useState<BinanceFuturesInterval>('1h');
-  const [activeTab, setActiveTab] = useState<'chart' | 'data'>('chart');
+  const [activeTab, setActiveTab] = useState<'chart' | 'data' | 'links'>('chart');
   const [candles, setCandles] = useState<BinanceFuturesCandle[]>([]);
   const [futuresSymbols, setFuturesSymbols] = useState<string[]>([]);
   const [currentMetrics, setCurrentMetrics] = useState<BscAlphaTokenMetrics | null>(null);
@@ -517,7 +529,9 @@ export function CoinChartPage() {
     const value = priceExtremes[extreme];
     return `${formatPrice(value.price, priceFormat.precision)} · ${formatUtcDate(value.time)}`;
   };
+  const watchlisted = isWatchlisted(symbol);
   const exchangeUrl = `https://www.binance.com/en/futures/${encodeURIComponent(symbol)}`;
+  const coinMarketCapUrl = getCoinMarketCapUrl(currentMetrics?.name ?? null, symbol);
 
   return (
     <Container maxWidth="lg" className="o-coin-chart-page">
@@ -542,23 +556,34 @@ export function CoinChartPage() {
                 />
               )}
             />
-            <Button
-              className="o-coin-chart-page__exchange-button"
-              component="a"
-              href={exchangeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="outlined"
-              endIcon={<ArrowOutwardRoundedIcon />}
-            >
-              Open on Binance
-            </Button>
+            <Stack direction="row" spacing={1.5} className="o-coin-chart-page__heading-actions">
+              <Button
+                className="o-coin-chart-page__watchlist-button"
+                size="small"
+                variant="outlined"
+                onClick={() => toggleWatchlist(symbol)}
+              >
+                {watchlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
+              </Button>
+              <Button
+                className="o-coin-chart-page__exchange-button"
+                size="small"
+                component="a"
+                href={exchangeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="outlined"
+                endIcon={<ArrowOutwardRoundedIcon />}
+              >
+                Open on Binance
+              </Button>
+            </Stack>
           </Box>
 
           <Paper elevation={0} className="o-coin-chart-page__chart-panel">
             <Tabs
               value={activeTab}
-              onChange={(_, value: 'chart' | 'data') => setActiveTab(value)}
+              onChange={(_, value: 'chart' | 'data' | 'links') => setActiveTab(value)}
               aria-label="Futures views"
               className="o-coin-chart-page__tabs"
             >
@@ -573,6 +598,12 @@ export function CoinChartPage() {
                 value="data"
                 id="futures-data-tab"
                 aria-controls="futures-data-panel"
+              />
+              <Tab
+                label="Links"
+                value="links"
+                id="futures-links-tab"
+                aria-controls="futures-links-panel"
               />
             </Tabs>
 
@@ -698,7 +729,7 @@ export function CoinChartPage() {
                   </MuiLink>
                 </Typography>
               </Box>
-            ) : (
+            ) : activeTab === 'data' ? (
               <Box
                 role="tabpanel"
                 id="futures-data-panel"
@@ -849,6 +880,74 @@ export function CoinChartPage() {
                     </Box>
                   </Box>
                 )}
+              </Box>
+            ) : (
+              <Box
+                role="tabpanel"
+                id="futures-links-panel"
+                aria-labelledby="futures-links-tab"
+                className="o-coin-chart-page__links-panel"
+              >
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={2}
+                  className="o-coin-chart-page__resource-links"
+                >
+                  <MuiLink
+                    href={exchangeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    underline="none"
+                    color="inherit"
+                    className="o-coin-chart-page__resource-link"
+                  >
+                    <Box
+                      component="img"
+                      src="https://bin.bnbstatic.com/static/images/common/favicon.ico"
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="o-coin-chart-page__resource-icon"
+                    />
+                    <Typography component="span">Binance Futures</Typography>
+                    <ArrowOutwardRoundedIcon fontSize="small" />
+                  </MuiLink>
+                  <MuiLink
+                    href={`https://www.coinglass.com/tv/Binance_${encodeURIComponent(symbol)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    underline="none"
+                    color="inherit"
+                    className="o-coin-chart-page__resource-link"
+                  >
+                    <Box
+                      component="img"
+                      src="https://cdn.coinglasscdn.com/static/icon_200.png"
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="o-coin-chart-page__resource-icon"
+                    />
+                    <Typography component="span">CoinGlass</Typography>
+                    <ArrowOutwardRoundedIcon fontSize="small" />
+                  </MuiLink>
+                  <MuiLink
+                    href={coinMarketCapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    underline="none"
+                    color="inherit"
+                    className="o-coin-chart-page__resource-link"
+                  >
+                    <Box
+                      component="img"
+                      src="https://coinmarketcap.com/favicon.ico"
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="o-coin-chart-page__resource-icon"
+                    />
+                    <Typography component="span">CoinMarketCap</Typography>
+                    <ArrowOutwardRoundedIcon fontSize="small" />
+                  </MuiLink>
+                </Stack>
               </Box>
             )}
           </Paper>

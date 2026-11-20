@@ -23,6 +23,7 @@ export interface BscAlphaToken {
 
 export interface BscAlphaTokenMetrics {
   symbol: string;
+  name: string | null;
   marketCap: number | null;
   fdv: number | null;
   circulatingSupply: number | null;
@@ -77,6 +78,7 @@ function parseCurrentTokenMetrics(value: unknown): BscAlphaTokenMetrics | null {
 
   return {
     symbol: value.symbol.toUpperCase(),
+    name: typeof value.name === 'string' ? value.name : null,
     marketCap: parseNumericValue(value.marketCap),
     fdv: parseNumericValue(value.fdv),
     ...parseSupplyMetrics(value)
