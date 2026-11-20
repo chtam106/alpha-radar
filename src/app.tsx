@@ -16,6 +16,11 @@ const CoinChartPage = lazy(() =>
     default: Page
   }))
 );
+const WatchlistPage = lazy(() =>
+  import('@/components/organisms/watchlist-page').then(({ WatchlistPage: Page }) => ({
+    default: Page
+  }))
+);
 
 function AppRoutes() {
   const { pathname } = useLocation();
@@ -26,7 +31,9 @@ function AppRoutes() {
       ? `${chartSymbol.toUpperCase()} | Binance Futures`
       : pathname === '/'
         ? 'Crypto Desk | Binance'
-        : 'High-Risk Alpha Radar | Binance';
+        : pathname === '/watchlist'
+          ? 'Watchlist | Binance'
+          : 'High-Risk Alpha Radar | Binance';
   }, [chartSymbol, pathname]);
 
   return (
@@ -46,6 +53,20 @@ function AppRoutes() {
               }
             >
               <CoinChartPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/watchlist"
+          element={
+            <Suspense
+              fallback={
+                <Box className="o-app-shell__route-loading">
+                  <CircularProgress aria-label="Loading watchlist page" />
+                </Box>
+              }
+            >
+              <WatchlistPage />
             </Suspense>
           }
         />

@@ -1,11 +1,15 @@
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
+import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import {
   Alert,
   Box,
   Button,
   CircularProgress,
   Container,
-  Link as MuiLink,
+  Menu,
+  MenuItem,
   Stack,
   Table,
   TableBody,
@@ -16,8 +20,9 @@ import {
   TableSortLabel,
   Typography
 } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { type MouseEvent as ReactMouseEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
 
 type SortField = 'marketCap' | 'fdv' | 'unlockedPercent';
@@ -27,6 +32,8 @@ type SortPreference = { field: SortField; direction: SortDirection };
 const SORT_PREFERENCE_STORAGE_KEY = 'crypto-dashboard:sort-preference';
 const DEFAULT_SORT_PREFERENCE: SortPreference = { field: 'marketCap', direction: 'asc' };
 const TARGET_FDV = 27_500_000_000;
+
+type TokenContextMenu = { token: BscAlphaToken; mouseX: number; mouseY: number };
 
 const usdFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -104,6 +111,8 @@ export function CryptoDashboard() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [sortPreference, setSortPreference] = useState(readSortPreference);
+  const { isWatchlisted, toggleWatchlist } = useWatchlist();
+  const [contextMenu, setContextMenu] = useState<TokenContextMenu | null>(null);
   const { field: sortField, direction: sortDirection } = sortPreference;
   const navigate = useNavigate();
 
@@ -168,6 +177,46 @@ export function CryptoDashboard() {
     [sortDirection, sortField, tokens]
   );
 
+  function handleContextMenuOnOverlay(event: ReactMouseEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const paper = document.querySelector<HTMLElement>('.o-crypto-dashboard__context-menu');
+    const backdrop = document.querySelector<HTMLElement>(
+      '.o-crypto-dashboard__context-menu-backdrop'
+    );
+    const paperPointerEvents = paper?.style.pointerEvents;
+    const backdropPointerEvents = backdrop?.style.pointerEvents;
+    const row = (() => {
+      try {
+        if (paper) {
+          paper.style.pointerEvents = 'none';
+        }
+        if (backdrop) {
+          backdrop.style.pointerEvents = 'none';
+        }
+        return (
+          document
+            .elementFromPoint(event.clientX, event.clientY)
+            ?.closest<HTMLElement>('[data-futures-symbol]') ?? null
+        );
+      } finally {
+        if (paper) {
+          paper.style.pointerEvents = paperPointerEvents ?? '';
+        }
+        if (backdrop) {
+          backdrop.style.pointerEvents = backdropPointerEvents ?? '';
+        }
+      }
+    })();
+
+    const symbol = row?.dataset.futuresSymbol;
+    const token = sortedTokens.find((candidate) => candidate.futuresSymbol === symbol);
+    if (token && token.futuresSymbol !== contextMenu?.token.futuresSymbol) {
+      setContextMenu({ token, mouseX: event.clientX, mouseY: event.clientY });
+    } else if (!token) {
+      setContextMenu(null);
+    }
+  }
+
   function handleSort(field: SortField) {
     setSortPreference((current) =>
       current.field === field
@@ -207,7 +256,7 @@ export function CryptoDashboard() {
 
           <Box className="o-crypto-dashboard__list-panel">
             <Box className="o-crypto-dashboard__list-heading">
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                 {tokens.length > 0 && (
                   <Typography variant="body2" className="o-crypto-dashboard__list-meta">
                     {tokens.length} coins match
@@ -257,12 +306,20 @@ export function CryptoDashboard() {
                   aria-label="Binance Alpha BSC tokens listed in futures but not spot, with unlock of 35 percent or less"
                   className="o-crypto-dashboard__table"
                 >
+                  <colgroup>
+                    <col span={6} />
+                    <col className="o-crypto-dashboard__target-fdv-col" />
+                    <col className="o-crypto-dashboard__target-fdv-col" />
+                  </colgroup>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Coin</TableCell>
-                      <TableCell align="center">Price</TableCell>
+                      <TableCell rowSpan={2}>Coin</TableCell>
+                      <TableCell align="center" rowSpan={2}>
+                        Price
+                      </TableCell>
                       <TableCell
                         align="center"
+                        rowSpan={2}
                         sortDirection={sortField === 'marketCap' ? sortDirection : false}
                       >
                         <TableSortLabel
@@ -275,6 +332,7 @@ export function CryptoDashboard() {
                       </TableCell>
                       <TableCell
                         align="center"
+                        rowSpan={2}
                         sortDirection={sortField === 'fdv' ? sortDirection : false}
                       >
                         <TableSortLabel
@@ -285,8 +343,12 @@ export function CryptoDashboard() {
                           FDV
                         </TableSortLabel>
                       </TableCell>
+                      <TableCell align="center" rowSpan={2}>
+                        Total Supply
+                      </TableCell>
                       <TableCell
                         align="center"
+                        rowSpan={2}
                         sortDirection={sortField === 'unlockedPercent' ? sortDirection : false}
                       >
                         <TableSortLabel
@@ -294,11 +356,20 @@ export function CryptoDashboard() {
                           direction={sortField === 'unlockedPercent' ? sortDirection : 'asc'}
                           onClick={() => handleSort('unlockedPercent')}
                         >
-                          Unlock
+                          Unlocked
                         </TableSortLabel>
                       </TableCell>
-                      <TableCell align="center">@ $27.5B FDV</TableCell>
-                      <TableCell align="center">Links</TableCell>
+                      <TableCell align="center" colSpan={2}>
+                        @ $27.5B FDV
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                        Price
+                      </TableCell>
+                      <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                        MC
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -308,10 +379,34 @@ export function CryptoDashboard() {
                         hover
                         role="row"
                         tabIndex={0}
-                        aria-label={`Open ${token.futuresSymbol} chart; press Enter or Space`}
+                        aria-haspopup="menu"
+                        aria-label={`Open ${token.futuresSymbol} chart; press Enter or Space, or use the context menu for watchlist options`}
                         className="o-crypto-dashboard__token-row"
+                        data-futures-symbol={token.futuresSymbol}
                         onClick={() => openTokenChart(token.futuresSymbol)}
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          setContextMenu({
+                            token,
+                            mouseX: event.clientX,
+                            mouseY: event.clientY
+                          });
+                        }}
                         onKeyDown={(event) => {
+                          if (
+                            (event.shiftKey && event.key === 'F10') ||
+                            event.key === 'ContextMenu'
+                          ) {
+                            event.preventDefault();
+                            const bounds = event.currentTarget.getBoundingClientRect();
+                            setContextMenu({
+                              token,
+                              mouseX: bounds.left,
+                              mouseY: bounds.bottom
+                            });
+                            return;
+                          }
+
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
                             openTokenChart(token.futuresSymbol);
@@ -352,105 +447,19 @@ export function CryptoDashboard() {
                         <TableCell align="center">{formatPrice(token.price)}</TableCell>
                         <TableCell align="center">{formatUsd(token.marketCap)}</TableCell>
                         <TableCell align="center">{formatUsd(token.fdv)}</TableCell>
-                        <TableCell align="center">
-                          <Stack
-                            spacing={0.25}
-                            sx={{ alignItems: 'center' }}
-                            className="o-crypto-dashboard__supply-data"
-                          >
-                            <Typography variant="body2">
-                              {percentFormatter.format(token.unlockedPercent)}%
-                            </Typography>
-                            <Typography variant="caption">
-                              Total supply: {formatSupply(token.totalSupply)}
-                            </Typography>
-                          </Stack>
+                        <TableCell align="center" className="o-crypto-dashboard__supply-data">
+                          {formatSupply(token.totalSupply)}
                         </TableCell>
                         <TableCell align="center">
-                          <Stack
-                            spacing={0.25}
-                            sx={{ alignItems: 'center' }}
-                            className="o-crypto-dashboard__target-fdv"
-                          >
-                            <Typography variant="body2">
-                              Price:{' '}
-                              {formatPrice(
-                                token.totalSupply > 0 ? TARGET_FDV / token.totalSupply : null
-                              )}
-                            </Typography>
-                            <Typography variant="body2">
-                              MC: {formatUsd((TARGET_FDV * token.unlockedPercent) / 100)}
-                            </Typography>
-                          </Stack>
+                          {percentFormatter.format(token.unlockedPercent)}%
                         </TableCell>
-                        <TableCell align="center">
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            sx={{ alignItems: 'center', justifyContent: 'center' }}
-                            className="o-crypto-dashboard__external-links"
-                          >
-                            <MuiLink
-                              href={`https://www.binance.com/en/futures/${encodeURIComponent(token.futuresSymbol)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              color="inherit"
-                              underline="none"
-                              aria-label="Binance Futures"
-                              title="Binance Futures"
-                              onClick={(event) => event.stopPropagation()}
-                              onKeyDown={(event) => event.stopPropagation()}
-                            >
-                              <Box
-                                component="img"
-                                src="https://bin.bnbstatic.com/static/images/common/favicon.ico"
-                                alt=""
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                                className="o-crypto-dashboard__external-link-icon"
-                              />
-                            </MuiLink>
-                            <MuiLink
-                              href={`https://www.coinglass.com/tv/Binance_${encodeURIComponent(token.futuresSymbol)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              color="inherit"
-                              underline="none"
-                              aria-label="CoinGlass"
-                              title="CoinGlass"
-                              onClick={(event) => event.stopPropagation()}
-                              onKeyDown={(event) => event.stopPropagation()}
-                            >
-                              <Box
-                                component="img"
-                                src="https://cdn.coinglasscdn.com/static/icon_200.png"
-                                alt=""
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                                className="o-crypto-dashboard__external-link-icon"
-                              />
-                            </MuiLink>
-                            <MuiLink
-                              href={getCoinMarketCapUrl(token)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              color="inherit"
-                              underline="none"
-                              aria-label="CoinMarketCap"
-                              title="CoinMarketCap"
-                              onClick={(event) => event.stopPropagation()}
-                              onKeyDown={(event) => event.stopPropagation()}
-                            >
-                              <Box
-                                component="img"
-                                src="https://coinmarketcap.com/favicon.ico"
-                                alt=""
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                                className="o-crypto-dashboard__external-link-icon"
-                              />
-                            </MuiLink>
-                          </Stack>
+                        <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                          {formatPrice(
+                            token.totalSupply > 0 ? TARGET_FDV / token.totalSupply : null
+                          )}
+                        </TableCell>
+                        <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                          {formatUsd((TARGET_FDV * token.unlockedPercent) / 100)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -466,6 +475,129 @@ export function CryptoDashboard() {
               </Box>
             )}
           </Box>
+          <Menu
+            open={contextMenu !== null}
+            onClose={() => setContextMenu(null)}
+            anchorReference="anchorPosition"
+            slotProps={{
+              paper: {
+                className: 'o-crypto-dashboard__context-menu',
+                onContextMenu: handleContextMenuOnOverlay
+              },
+              backdrop: {
+                className: 'o-crypto-dashboard__context-menu-backdrop',
+                onContextMenu: handleContextMenuOnOverlay
+              },
+              list: { className: 'o-crypto-dashboard__context-menu-list' }
+            }}
+            anchorPosition={
+              contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined
+            }
+          >
+            {contextMenu && (
+              <>
+                <Box className="o-crypto-dashboard__context-menu-heading">
+                  <Typography className="o-crypto-dashboard__context-menu-label">Token</Typography>
+                  <Typography className="o-crypto-dashboard__context-menu-symbol">
+                    {contextMenu.token.futuresSymbol}
+                  </Typography>
+                </Box>
+                <MenuItem
+                  className="o-crypto-dashboard__context-menu-item"
+                  onClick={() => {
+                    toggleWatchlist(contextMenu.token.futuresSymbol);
+                    setContextMenu(null);
+                  }}
+                >
+                  <Box component="span" className="o-crypto-dashboard__context-menu-icon-wrap">
+                    {isWatchlisted(contextMenu.token.futuresSymbol) ? (
+                      <StarRoundedIcon className="o-crypto-dashboard__context-menu-icon" />
+                    ) : (
+                      <StarBorderRoundedIcon className="o-crypto-dashboard__context-menu-icon" />
+                    )}
+                  </Box>
+                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                    {isWatchlisted(contextMenu.token.futuresSymbol)
+                      ? 'Remove from watchlist'
+                      : 'Add to watchlist'}
+                  </Typography>
+                </MenuItem>
+                <Box className="o-crypto-dashboard__context-menu-section">Quick links</Box>
+                <MenuItem
+                  component="a"
+                  href={`https://www.binance.com/en/futures/${encodeURIComponent(contextMenu.token.futuresSymbol)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="o-crypto-dashboard__context-menu-item"
+                  onClick={() => setContextMenu(null)}
+                >
+                  <Box
+                    component="span"
+                    className="o-crypto-dashboard__context-menu-icon-wrap o-crypto-dashboard__context-menu-link-icon-wrap"
+                  >
+                    <Box
+                      component="img"
+                      src="https://bin.bnbstatic.com/static/images/common/favicon.ico"
+                      alt=""
+                      className="o-crypto-dashboard__context-menu-link-logo"
+                    />
+                  </Box>
+                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                    Binance Futures
+                  </Typography>
+                  <OpenInNewRoundedIcon className="o-crypto-dashboard__context-menu-external-icon" />
+                </MenuItem>
+                <MenuItem
+                  component="a"
+                  href={`https://www.coinglass.com/tv/Binance_${encodeURIComponent(contextMenu.token.futuresSymbol)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="o-crypto-dashboard__context-menu-item"
+                  onClick={() => setContextMenu(null)}
+                >
+                  <Box
+                    component="span"
+                    className="o-crypto-dashboard__context-menu-icon-wrap o-crypto-dashboard__context-menu-link-icon-wrap"
+                  >
+                    <Box
+                      component="img"
+                      src="https://cdn.coinglasscdn.com/static/icon_200.png"
+                      alt=""
+                      className="o-crypto-dashboard__context-menu-link-logo"
+                    />
+                  </Box>
+                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                    CoinGlass
+                  </Typography>
+                  <OpenInNewRoundedIcon className="o-crypto-dashboard__context-menu-external-icon" />
+                </MenuItem>
+                <MenuItem
+                  component="a"
+                  href={getCoinMarketCapUrl(contextMenu.token)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="o-crypto-dashboard__context-menu-item"
+                  onClick={() => setContextMenu(null)}
+                >
+                  <Box
+                    component="span"
+                    className="o-crypto-dashboard__context-menu-icon-wrap o-crypto-dashboard__context-menu-link-icon-wrap"
+                  >
+                    <Box
+                      component="img"
+                      src="https://coinmarketcap.com/favicon.ico"
+                      alt=""
+                      className="o-crypto-dashboard__context-menu-link-logo"
+                    />
+                  </Box>
+                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                    CoinMarketCap
+                  </Typography>
+                  <OpenInNewRoundedIcon className="o-crypto-dashboard__context-menu-external-icon" />
+                </MenuItem>
+              </>
+            )}
+          </Menu>
         </Stack>
       </Box>
     </Container>

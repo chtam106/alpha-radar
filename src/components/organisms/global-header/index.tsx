@@ -31,6 +31,12 @@ export function GlobalHeader() {
           >
             High-Risk Alpha Radar
           </NavLink>
+          <NavLink
+            to="/watchlist"
+            className={({ isActive }) => `o-global-header__link${isActive ? ' is-active' : ''}`}
+          >
+            Watchlist
+          </NavLink>
         </Stack>
       </Container>
     </Box>
