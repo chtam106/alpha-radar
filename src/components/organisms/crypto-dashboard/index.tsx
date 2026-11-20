@@ -6,6 +6,7 @@ import {
   Button,
   CircularProgress,
   Container,
+  Link as MuiLink,
   Stack,
   Table,
   TableBody,
@@ -86,6 +87,15 @@ function formatPrice(value: number | null): string {
 
 function formatSupply(value: number): string {
   return supplyFormatter.format(value);
+}
+
+function getCoinMarketCapUrl(token: BscAlphaToken): string {
+  const slug =
+    token.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || token.symbol.toLowerCase();
+  return `https://coinmarketcap.com/currencies/${slug}/`;
 }
 
 export function CryptoDashboard() {
@@ -289,6 +299,7 @@ export function CryptoDashboard() {
                         </TableSortLabel>
                       </TableCell>
                       <TableCell align="center">@ $27.5B FDV</TableCell>
+                      <TableCell align="center">Links</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -296,9 +307,9 @@ export function CryptoDashboard() {
                       <TableRow
                         key={token.tokenId}
                         hover
-                        role="link"
+                        role="row"
                         tabIndex={0}
-                        aria-label={`View ${token.futuresSymbol} chart`}
+                        aria-label={`Open ${token.futuresSymbol} chart; press Enter or Space`}
                         className="o-crypto-dashboard__token-row"
                         onClick={() => openTokenChart(token.futuresSymbol)}
                         onKeyDown={(event) => {
@@ -319,6 +330,7 @@ export function CryptoDashboard() {
                               alt={token.symbol}
                               slotProps={{ img: { referrerPolicy: 'no-referrer' } }}
                               className="o-crypto-dashboard__token-icon"
+                              sx={{ overflow: 'visible' }}
                             >
                               {token.symbol.slice(0, 1)}
                             </Avatar>
@@ -368,6 +380,75 @@ export function CryptoDashboard() {
                             <Typography variant="body2">
                               MC: {formatUsd((TARGET_FDV * token.unlockedPercent) / 100)}
                             </Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{ alignItems: 'center', justifyContent: 'center' }}
+                            className="o-crypto-dashboard__external-links"
+                          >
+                            <MuiLink
+                              href={`https://www.binance.com/en/futures/${encodeURIComponent(token.futuresSymbol)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              color="inherit"
+                              underline="none"
+                              aria-label="Binance Futures"
+                              title="Binance Futures"
+                              onClick={(event) => event.stopPropagation()}
+                              onKeyDown={(event) => event.stopPropagation()}
+                            >
+                              <Box
+                                component="img"
+                                src="https://bin.bnbstatic.com/static/images/common/favicon.ico"
+                                alt=""
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                                className="o-crypto-dashboard__external-link-icon"
+                              />
+                            </MuiLink>
+                            <MuiLink
+                              href={`https://www.coinglass.com/tv/Binance_${encodeURIComponent(token.futuresSymbol)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              color="inherit"
+                              underline="none"
+                              aria-label="CoinGlass"
+                              title="CoinGlass"
+                              onClick={(event) => event.stopPropagation()}
+                              onKeyDown={(event) => event.stopPropagation()}
+                            >
+                              <Box
+                                component="img"
+                                src="https://cdn.coinglasscdn.com/static/icon_200.png"
+                                alt=""
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                                className="o-crypto-dashboard__external-link-icon"
+                              />
+                            </MuiLink>
+                            <MuiLink
+                              href={getCoinMarketCapUrl(token)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              color="inherit"
+                              underline="none"
+                              aria-label="CoinMarketCap"
+                              title="CoinMarketCap"
+                              onClick={(event) => event.stopPropagation()}
+                              onKeyDown={(event) => event.stopPropagation()}
+                            >
+                              <Box
+                                component="img"
+                                src="https://coinmarketcap.com/favicon.ico"
+                                alt=""
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                                className="o-crypto-dashboard__external-link-icon"
+                              />
+                            </MuiLink>
                           </Stack>
                         </TableCell>
                       </TableRow>

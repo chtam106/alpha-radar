@@ -692,7 +692,7 @@ export function CoinChartPage() {
                     href="https://www.tradingview.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    color="inherit"
+                    color="primary"
                   >
                     Charts by TradingView
                   </MuiLink>

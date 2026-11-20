@@ -24,13 +24,13 @@
 
   &__refresh {
     flex: 0 0 auto;
-    border-color: rgb(255 255 255 / 16%);
-    color: #dce5eb;
+    border-color: var(--app-accent-border);
+    color: var(--app-accent);
     text-transform: none;
   }
 
   &__list-panel {
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid rgb(255 255 255 / 8%);
     border-radius: 18px;
     background: #181a20;
@@ -59,6 +59,7 @@
 
   &__table-wrap {
     overflow-x: auto;
+    scrollbar-width: thin;
   }
 
   &__table {
@@ -87,10 +88,19 @@
     width: 36px;
     height: 36px;
     flex: 0 0 36px;
-    border-radius: 50%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 10px;
     background: #202b34;
     color: var(--app-accent);
     font-weight: 700;
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
   }
 
   &__token-row {
@@ -124,6 +134,19 @@
     color: #dce5eb;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+  }
+
+  &__external-links {
+    height: 24px;
+    color: #9ba8b5;
+    white-space: nowrap;
+  }
+
+  &__external-link-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
   }
 
   &__state {
