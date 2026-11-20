@@ -1,17 +1,42 @@
-$app-background: #090d12;
-
 :root {
   color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizelegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scrollbar-color: #3b4148 transparent;
+  scrollbar-width: thin;
+
+  --app-accent: #9cf5c4;
+  --app-accent-soft: rgb(156 245 196 / 10%);
+  --app-accent-subtle: rgb(156 245 196 / 8%);
+  --app-accent-border: rgb(156 245 196 / 22%);
+  --app-accent-faint: rgb(156 245 196 / 8%);
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  font-size: 16px;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #3b4148;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #565d66;
 }
 
 #root {
@@ -20,6 +45,11 @@ body {
 
 .o-app-shell {
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse at 14% 0%, rgb(38 89 66 / 18%), transparent 34rem), $app-background;
+  background: #0b0e11;
+
+  &__route-loading {
+    display: grid;
+    min-height: 60vh;
+    place-items: center;
+  }
 }

@@ -5,8 +5,8 @@
   align-items: center;
   overflow: hidden;
   padding: 36px;
-  border: 1px solid rgb(156 245 196 / 12%);
-  background: linear-gradient(110deg, rgb(20 39 32 / 96%), rgb(17 24 32 / 96%) 70%), #111820;
+  border: 1px solid var(--app-accent-border);
+  background: linear-gradient(110deg, #1e2329, #181a20 70%);
 
   &__copy {
     position: relative;
@@ -17,7 +17,7 @@
   &__symbol {
     position: absolute;
     right: 42px;
-    color: rgb(156 245 196 / 8%);
+    color: var(--app-accent-faint);
     font-size: clamp(180px, 30vw, 320px);
     font-weight: 700;
     line-height: 1;

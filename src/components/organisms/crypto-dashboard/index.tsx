@@ -1,79 +1,382 @@
-import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
-import ShowChartRoundedIcon from '@mui/icons-material/ShowChartRounded';
-import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
-import { Box, Container, Stack, Typography } from '@mui/material';
-import { DataSourceStatus } from '@/components/atoms/data-source-status';
-import { HeroPanel } from '@/components/molecules/hero-panel';
-import { TopBar } from '@/components/molecules/top-bar';
-import { WorkspaceFeatureCard } from '@/components/molecules/workspace-feature-card';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import {
+  Alert,
+  Avatar,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableSortLabel,
+  Typography
+} from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
 
-const workspaceFeatures = [
-  {
-    title: 'Market data',
-    description: 'Connect a price provider to explore live assets and market movement.',
-    icon: <ShowChartRoundedIcon />
-  },
-  {
-    title: 'Watchlist',
-    description: 'Keep the coins and tokens you follow together in one place.',
-    icon: <StarBorderRoundedIcon />
-  },
-  {
-    title: 'Portfolio',
-    description: 'Build a portfolio view when you are ready to add account data.',
-    icon: <AccountBalanceWalletOutlinedIcon />
+type SortField = 'marketCap' | 'fdv' | 'unlockedPercent';
+type SortDirection = 'asc' | 'desc';
+type SortPreference = { field: SortField; direction: SortDirection };
+
+const SORT_PREFERENCE_STORAGE_KEY = 'crypto-dashboard:sort-preference';
+const DEFAULT_SORT_PREFERENCE: SortPreference = { field: 'marketCap', direction: 'asc' };
+const TARGET_FDV = 27_500_000_000;
+
+const usdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  notation: 'compact',
+  maximumFractionDigits: 2
+});
+
+const percentFormatter = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 2
+});
+
+const supplyFormatter = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 2
+});
+
+function isSortField(value: string | undefined): value is SortField {
+  return value === 'marketCap' || value === 'fdv' || value === 'unlockedPercent';
+}
+
+function isSortDirection(value: string | undefined): value is SortDirection {
+  return value === 'asc' || value === 'desc';
+}
+
+function readSortPreference(): SortPreference {
+  if (typeof window === 'undefined') {
+    return DEFAULT_SORT_PREFERENCE;
   }
-];
+
+  const savedPreference = window.localStorage.getItem(SORT_PREFERENCE_STORAGE_KEY);
+  if (!savedPreference) {
+    return DEFAULT_SORT_PREFERENCE;
+  }
+
+  const [field, direction, ...extra] = savedPreference.split(':');
+  if (extra.length === 0 && isSortField(field) && isSortDirection(direction)) {
+    return { field, direction };
+  }
+
+  return DEFAULT_SORT_PREFERENCE;
+}
+
+const priceFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumSignificantDigits: 6
+});
+
+function formatUsd(value: number | null): string {
+  return value === null ? '—' : usdFormatter.format(value);
+}
+
+function formatPrice(value: number | null): string {
+  return value === null ? '—' : priceFormatter.format(value);
+}
+
+function formatSupply(value: number): string {
+  return supplyFormatter.format(value);
+}
 
 export function CryptoDashboard() {
+  const [tokens, setTokens] = useState<BscAlphaToken[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [sortPreference, setSortPreference] = useState(readSortPreference);
+  const { field: sortField, direction: sortDirection } = sortPreference;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadTokens() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await fetchBscAlphaTokens(controller.signal);
+        setTokens(result);
+        setLastUpdated(new Date());
+      } catch (loadError) {
+        if (!controller.signal.aborted) {
+          setError(
+            loadError instanceof Error ? loadError.message : 'Unable to load Binance Alpha tokens.'
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadTokens();
+    return () => controller.abort();
+  }, [refreshKey]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      SORT_PREFERENCE_STORAGE_KEY,
+      `${sortPreference.field}:${sortPreference.direction}`
+    );
+  }, [sortPreference]);
+
+  const sortedTokens = useMemo(
+    () =>
+      [...tokens].sort((first, second) => {
+        const firstValue = first[sortField];
+        const secondValue = second[sortField];
+        if (firstValue === null) {
+          return secondValue === null ? 0 : 1;
+        }
+        if (secondValue === null) {
+          return -1;
+        }
+        return sortDirection === 'asc' ? firstValue - secondValue : secondValue - firstValue;
+      }),
+    [sortDirection, sortField, tokens]
+  );
+
+  function handleSort(field: SortField) {
+    setSortPreference((current) =>
+      current.field === field
+        ? { field, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+        : { field, direction: field === 'unlockedPercent' ? 'asc' : 'desc' }
+    );
+  }
+
   return (
     <Container maxWidth="lg" className="o-crypto-dashboard">
-      <TopBar />
-
       <Box component="main" className="o-crypto-dashboard__main">
-        <Stack spacing={4}>
-          <Box className="o-crypto-dashboard__heading">
-            <Box>
+        <Stack spacing={3}>
+          <Box className="o-crypto-dashboard__intro">
+            <Box className="o-crypto-dashboard__intro-copy">
+              <Typography variant="h1" sx={{ mt: 0.5, fontSize: { xs: 34, sm: 46 } }}>
+                High-Risk Alpha Radar
+              </Typography>
               <Typography
-                variant="overline"
-                color="primary.main"
-                sx={{ fontWeight: 700, letterSpacing: '0.14em' }}
+                color="text.secondary"
+                sx={{ mt: 1 }}
+                className="o-crypto-dashboard__description"
               >
-                MARKET OVERVIEW
-              </Typography>
-              <Typography variant="h1" sx={{ mt: 0.5, fontSize: { xs: 36, sm: 48 } }}>
-                Your crypto workspace
-              </Typography>
-              <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 620 }}>
-                A clean foundation for tracking digital assets. Connect a market-data provider to
-                bring live prices and charts into your dashboard.
+                Binance Alpha on BSC · Futures only, no Spot, ≤35% circulating supply. Speculative
+                research; scams and rug pulls are possible.
               </Typography>
             </Box>
-            <DataSourceStatus />
+            <Button
+              variant="outlined"
+              startIcon={<RefreshRoundedIcon />}
+              onClick={() => setRefreshKey((key) => key + 1)}
+              disabled={loading}
+              className="o-crypto-dashboard__refresh"
+            >
+              Refresh
+            </Button>
           </Box>
 
-          <HeroPanel />
-
-          <Box>
-            <Typography variant="h2" sx={{ fontSize: 20, mb: 2 }}>
-              Workspace modules
-            </Typography>
-            <Box className="o-crypto-dashboard__grid">
-              {workspaceFeatures.map((feature) => (
-                <WorkspaceFeatureCard key={feature.title} {...feature} />
-              ))}
+          <Box className="o-crypto-dashboard__list-panel">
+            <Box className="o-crypto-dashboard__list-heading">
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                {tokens.length > 0 && (
+                  <Typography variant="body2" className="o-crypto-dashboard__list-meta">
+                    {tokens.length} coins match
+                  </Typography>
+                )}
+                {lastUpdated && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    className="o-crypto-dashboard__list-meta"
+                  >
+                    Updated{' '}
+                    {lastUpdated.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </Typography>
+                )}
+                {error && tokens.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    Count unavailable
+                  </Typography>
+                )}
+              </Stack>
+              {loading && tokens.length > 0 && (
+                <CircularProgress size={20} aria-label="Refreshing token list" />
+              )}
             </Box>
+
+            {error && (
+              <Alert
+                severity={tokens.length > 0 ? 'warning' : 'error'}
+                className="o-crypto-dashboard__alert"
+              >
+                {error}
+              </Alert>
+            )}
+
+            {loading && tokens.length === 0 ? (
+              <Box className="o-crypto-dashboard__state">
+                <CircularProgress size={28} />
+                <Typography color="text.secondary">Loading Binance Alpha tokens…</Typography>
+              </Box>
+            ) : tokens.length > 0 ? (
+              <TableContainer className="o-crypto-dashboard__table-wrap">
+                <Table
+                  aria-label="Binance Alpha BSC tokens listed in futures but not spot, with unlock of 35 percent or less"
+                  className="o-crypto-dashboard__table"
+                >
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Coin</TableCell>
+                      <TableCell align="center">Price</TableCell>
+                      <TableCell
+                        align="center"
+                        sortDirection={sortField === 'marketCap' ? sortDirection : false}
+                      >
+                        <TableSortLabel
+                          active={sortField === 'marketCap'}
+                          direction={sortField === 'marketCap' ? sortDirection : 'desc'}
+                          onClick={() => handleSort('marketCap')}
+                        >
+                          Market cap
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sortDirection={sortField === 'fdv' ? sortDirection : false}
+                      >
+                        <TableSortLabel
+                          active={sortField === 'fdv'}
+                          direction={sortField === 'fdv' ? sortDirection : 'desc'}
+                          onClick={() => handleSort('fdv')}
+                        >
+                          FDV
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sortDirection={sortField === 'unlockedPercent' ? sortDirection : false}
+                      >
+                        <TableSortLabel
+                          active={sortField === 'unlockedPercent'}
+                          direction={sortField === 'unlockedPercent' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('unlockedPercent')}
+                        >
+                          Unlock
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell align="center">@ $27.5B FDV</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {sortedTokens.map((token) => (
+                      <TableRow
+                        key={token.tokenId}
+                        hover
+                        role="link"
+                        tabIndex={0}
+                        aria-label={`View ${token.futuresSymbol} chart`}
+                        className="o-crypto-dashboard__token-row"
+                        onClick={() =>
+                          navigate(`/chart/${encodeURIComponent(token.futuresSymbol)}`)
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            navigate(`/chart/${encodeURIComponent(token.futuresSymbol)}`);
+                          }
+                        }}
+                      >
+                        <TableCell>
+                          <Stack
+                            direction="row"
+                            spacing={1.5}
+                            sx={{ alignItems: 'center', minWidth: 180 }}
+                          >
+                            <Avatar
+                              src={token.iconUrl ?? undefined}
+                              alt={token.symbol}
+                              slotProps={{ img: { referrerPolicy: 'no-referrer' } }}
+                              className="o-crypto-dashboard__token-icon"
+                            >
+                              {token.symbol.slice(0, 1)}
+                            </Avatar>
+                            <Box>
+                              <Typography className="o-crypto-dashboard__token-symbol">
+                                {token.symbol}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                className="o-crypto-dashboard__token-name"
+                              >
+                                {token.name}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </TableCell>
+                        <TableCell align="center">{formatPrice(token.price)}</TableCell>
+                        <TableCell align="center">{formatUsd(token.marketCap)}</TableCell>
+                        <TableCell align="center">{formatUsd(token.fdv)}</TableCell>
+                        <TableCell align="center">
+                          <Stack
+                            spacing={0.25}
+                            sx={{ alignItems: 'center' }}
+                            className="o-crypto-dashboard__supply-data"
+                          >
+                            <Typography variant="body2">
+                              {percentFormatter.format(token.unlockedPercent)}%
+                            </Typography>
+                            <Typography variant="caption">
+                              Total supply: {formatSupply(token.totalSupply)}
+                            </Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Stack
+                            spacing={0.25}
+                            sx={{ alignItems: 'center' }}
+                            className="o-crypto-dashboard__target-fdv"
+                          >
+                            <Typography variant="body2">
+                              Price:{' '}
+                              {formatPrice(
+                                token.totalSupply > 0 ? TARGET_FDV / token.totalSupply : null
+                              )}
+                            </Typography>
+                            <Typography variant="body2">
+                              MC: {formatUsd((TARGET_FDV * token.unlockedPercent) / 100)}
+                            </Typography>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : error ? null : (
+              <Box className="o-crypto-dashboard__state">
+                <Typography variant="subtitle1">No matching tokens found</Typography>
+                <Typography color="text.secondary">
+                  No active BSC Alpha tokens currently meet the 35% unlock threshold.
+                </Typography>
+              </Box>
+            )}
           </Box>
         </Stack>
-      </Box>
-
-      <Box component="footer" className="o-crypto-dashboard__footer">
-        <Typography variant="caption" color="text.secondary">
-          React · TypeScript · Material UI
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Market data and wallet connections are not configured.
-        </Typography>
       </Box>
     </Container>
   );
