@@ -85,13 +85,13 @@
   }
 
   &__token-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 36px;
     height: 36px;
     flex: 0 0 36px;
     aspect-ratio: 1;
-    overflow: hidden;
-    border-radius: 10px;
-    background: #202b34;
     color: var(--app-accent);
     font-weight: 700;
 

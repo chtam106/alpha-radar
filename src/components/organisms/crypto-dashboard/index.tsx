@@ -1,7 +1,6 @@
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   CircularProgress,
@@ -325,15 +324,17 @@ export function CryptoDashboard() {
                             spacing={1.5}
                             sx={{ alignItems: 'center', minWidth: 180 }}
                           >
-                            <Avatar
-                              src={token.iconUrl ?? undefined}
-                              alt={token.symbol}
-                              slotProps={{ img: { referrerPolicy: 'no-referrer' } }}
-                              className="o-crypto-dashboard__token-icon"
-                              sx={{ overflow: 'visible' }}
-                            >
-                              {token.symbol.slice(0, 1)}
-                            </Avatar>
+                            <Box component="span" className="o-crypto-dashboard__token-icon">
+                              {token.iconUrl ? (
+                                <img
+                                  src={token.iconUrl}
+                                  alt={token.symbol}
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                token.symbol.slice(0, 1)
+                              )}
+                            </Box>
                             <Box>
                               <Typography className="o-crypto-dashboard__token-symbol">
                                 {token.symbol}
