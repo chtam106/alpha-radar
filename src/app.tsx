@@ -78,9 +78,11 @@ function AppRoutes() {
   );
 }
 
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={routerBasename}>
       <ThemeProvider theme={appTheme}>
         <CssBaseline />
         <AppRoutes />
