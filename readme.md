@@ -23,6 +23,10 @@ npx wrangler login
 npx wrangler deploy
 ```
 
+The Worker also serves `/futures-token-info?symbol=XXX` (Binance Futures token-info). Unlock % comes
+from Futures first, then CoinMarketCap. Its URL is derived from `CMC_LISTING_URL`, so no extra
+variable is needed.
+
 Set the repository variable `CMC_LISTING_URL` (Settings → Secrets and variables → Actions →
 Variables) to `https://<worker>.workers.dev/cmc-listing`. Locally, set `VITE_CMC_LISTING_URL` in
 `.env.local` to use the Worker instead of the Vite middleware.
