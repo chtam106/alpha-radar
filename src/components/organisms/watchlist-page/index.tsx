@@ -349,7 +349,11 @@ export function WatchlistPage() {
                           )}
                         </TableCell>
                         <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
-                          {formatUsd(token ? (TARGET_FDV * token.unlockedPercent) / 100 : null)}
+                          {formatUsd(
+                            token && token.totalSupply > 0
+                              ? (TARGET_FDV * token.circulatingSupply) / token.totalSupply
+                              : null
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

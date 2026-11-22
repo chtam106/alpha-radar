@@ -547,7 +547,11 @@ export function CryptoDashboard() {
                           )}
                         </TableCell>
                         <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
-                          {formatUsd((TARGET_FDV * token.unlockedPercent) / 100)}
+                          {formatUsd(
+                            token.totalSupply > 0
+                              ? (TARGET_FDV * token.circulatingSupply) / token.totalSupply
+                              : null
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
