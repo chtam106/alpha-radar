@@ -41,6 +41,7 @@ jobs:
       - name: Build
         env:
           GITHUB_PAGES: true
+          VITE_CMC_LISTING_URL: ${{ vars.CMC_LISTING_URL }}
         run: pnpm run build
 
       - name: Add SPA fallback

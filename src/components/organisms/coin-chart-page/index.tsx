@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokenMetrics, type BscAlphaTokenMetrics } from '@/services/binance-alpha';
+import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
 import {
   fetchBinanceFuturesCandles,
   fetchBinanceFuturesAllTimeExtremes,
@@ -81,16 +82,6 @@ function formatPrice(value: number, precision: number): string {
 
 function formatMetric(value: number | null, formatter: Intl.NumberFormat): string {
   return value === null ? 'No data' : formatter.format(value);
-}
-
-function getCoinMarketCapUrl(name: string | null, symbol: string): string {
-  const baseAsset = symbol.replace(/(?:USDT|USDC)$/, '');
-  const slug =
-    (name ?? baseAsset)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || baseAsset.toLowerCase();
-  return `https://coinmarketcap.com/currencies/${slug}/`;
 }
 
 function formatUtcDate(time: number): string {
@@ -531,7 +522,12 @@ export function CoinChartPage() {
   };
   const watchlisted = isWatchlisted(symbol);
   const exchangeUrl = `https://www.binance.com/en/futures/${encodeURIComponent(symbol)}`;
-  const coinMarketCapUrl = getCoinMarketCapUrl(currentMetrics?.name ?? null, symbol);
+  const coinMarketCapUrl = getCoinMarketCapUrl({
+    cmcSlug: currentMetrics?.cmcSlug ?? null,
+    contractAddress: currentMetrics?.contractAddress ?? null,
+    name: currentMetrics?.name ?? null,
+    symbol: symbol.replace(/(?:USDT|USDC)$/, '')
+  });
 
   return (
     <Container maxWidth="lg" className="o-coin-chart-page">

@@ -22,6 +22,7 @@ import { type MouseEvent as ReactMouseEvent, useEffect, useMemo, useState } from
 import { useNavigate } from 'react-router-dom';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
+import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
 
 const usdFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -53,14 +54,16 @@ function formatSupply(value: number): string {
   return supplyFormatter.format(value);
 }
 
-function getCoinMarketCapUrl(name: string | null, symbol: string): string {
-  const baseAsset = symbol.replace(/(?:USDT|USDC)$/, '');
-  const slug =
-    (name ?? baseAsset)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || baseAsset.toLowerCase();
-  return `https://coinmarketcap.com/currencies/${slug}/`;
+function getWatchedTokenCoinMarketCapUrl(
+  futuresSymbol: string,
+  token: BscAlphaToken | null | undefined
+): string {
+  return getCoinMarketCapUrl({
+    cmcSlug: token?.cmcSlug ?? null,
+    contractAddress: token?.contractAddress ?? null,
+    name: token?.name ?? null,
+    symbol: futuresSymbol.replace(/(?:USDT|USDC)$/, '')
+  });
 }
 
 export function WatchlistPage() {
@@ -68,7 +71,7 @@ export function WatchlistPage() {
   const { watchlist, toggleWatchlist } = useWatchlist();
   const [contextMenu, setContextMenu] = useState<{
     symbol: string;
-    name: string | null;
+    coinMarketCapUrl: string;
     mouseX: number;
     mouseY: number;
   } | null>(null);
@@ -148,7 +151,7 @@ export function WatchlistPage() {
     if (watchedToken && watchedToken.symbol !== contextMenu?.symbol) {
       setContextMenu({
         symbol: watchedToken.symbol,
-        name: watchedToken.token?.name ?? null,
+        coinMarketCapUrl: getWatchedTokenCoinMarketCapUrl(watchedToken.symbol, watchedToken.token),
         mouseX: event.clientX,
         mouseY: event.clientY
       });
@@ -211,12 +214,20 @@ export function WatchlistPage() {
               <TableContainer className="o-crypto-dashboard__table-wrap">
                 <Table aria-label="Saved futures watchlist" className="o-crypto-dashboard__table">
                   <colgroup>
+                    <col className="o-crypto-dashboard__index-col" />
                     <col span={6} />
                     <col className="o-crypto-dashboard__target-fdv-col" />
                     <col className="o-crypto-dashboard__target-fdv-col" />
                   </colgroup>
                   <TableHead>
                     <TableRow>
+                      <TableCell
+                        align="center"
+                        rowSpan={2}
+                        className="o-crypto-dashboard__index-cell"
+                      >
+                        #
+                      </TableCell>
                       <TableCell rowSpan={2}>Coin</TableCell>
                       <TableCell align="center" rowSpan={2}>
                         Price
@@ -247,7 +258,7 @@ export function WatchlistPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {watchedTokens.map(({ symbol, token }) => (
+                    {watchedTokens.map(({ symbol, token }, index) => (
                       <TableRow
                         key={symbol}
                         hover
@@ -262,7 +273,7 @@ export function WatchlistPage() {
                           event.preventDefault();
                           setContextMenu({
                             symbol,
-                            name: token?.name ?? null,
+                            coinMarketCapUrl: getWatchedTokenCoinMarketCapUrl(symbol, token),
                             mouseX: event.clientX,
                             mouseY: event.clientY
                           });
@@ -276,7 +287,7 @@ export function WatchlistPage() {
                             const bounds = event.currentTarget.getBoundingClientRect();
                             setContextMenu({
                               symbol,
-                              name: token?.name ?? null,
+                              coinMarketCapUrl: getWatchedTokenCoinMarketCapUrl(symbol, token),
                               mouseX: bounds.left,
                               mouseY: bounds.bottom
                             });
@@ -289,6 +300,9 @@ export function WatchlistPage() {
                           }
                         }}
                       >
+                        <TableCell align="center" className="o-crypto-dashboard__index-cell">
+                          {index + 1}
+                        </TableCell>
                         <TableCell>
                           <Stack
                             direction="row"
@@ -335,7 +349,11 @@ export function WatchlistPage() {
                           )}
                         </TableCell>
                         <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
-                          {formatUsd(token ? (TARGET_FDV * token.unlockedPercent) / 100 : null)}
+                          {formatUsd(
+                            token && token.totalSupply > 0
+                              ? (TARGET_FDV * token.circulatingSupply) / token.totalSupply
+                              : null
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -436,7 +454,7 @@ export function WatchlistPage() {
                 </MenuItem>
                 <MenuItem
                   component="a"
-                  href={getCoinMarketCapUrl(contextMenu.name, contextMenu.symbol)}
+                  href={contextMenu.coinMarketCapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="o-crypto-dashboard__context-menu-item"

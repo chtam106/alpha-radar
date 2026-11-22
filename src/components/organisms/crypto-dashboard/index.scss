@@ -38,11 +38,9 @@
 
   &__list-heading {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 22px 24px;
-    border-bottom: 1px solid rgb(255 255 255 / 7%);
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
   }
 
   &__list-meta {
@@ -53,8 +51,52 @@
     font-variant-numeric: tabular-nums;
   }
 
+  &__filters {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__quick-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    @media (width > 600px) {
+      align-items: center;
+      flex-direction: row;
+      gap: 12px;
+    }
+  }
+
+  &__quick-filter-label {
+    color: #eaecef;
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+    text-transform: uppercase;
+
+    @media (width > 600px) {
+      min-width: 132px;
+    }
+  }
+
+  &__quick-filter-options {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__quick-filter-chip {
+    min-width: 56px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
   &__alert {
-    margin: 16px 24px 0;
+    margin: 16px 24px;
   }
 
   &__table-wrap {
@@ -82,6 +124,13 @@
     .o-crypto-dashboard__target-fdv-cell {
       padding-left: 0;
       padding-right: 0;
+    }
+
+    .o-crypto-dashboard__index-cell {
+      padding-right: 0;
+      padding-left: 16px;
+      color: #84929f;
+      font-variant-numeric: tabular-nums;
     }
 
     tbody tr:last-child td {
@@ -252,6 +301,10 @@
     white-space: nowrap;
   }
 
+  &__index-col {
+    width: 56px;
+  }
+
   &__target-fdv-col {
     width: 140px;
   }
@@ -281,12 +334,6 @@
 
     &__refresh {
       align-self: stretch;
-    }
-
-    &__list-heading {
-      align-items: flex-start;
-      flex-direction: column;
-      padding: 18px 16px;
     }
 
     &__alert {
