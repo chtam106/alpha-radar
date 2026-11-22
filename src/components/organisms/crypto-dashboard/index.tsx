@@ -6,6 +6,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Container,
   Menu,
@@ -24,6 +25,7 @@ import { type MouseEvent as ReactMouseEvent, useEffect, useMemo, useState } from
 import { useNavigate } from 'react-router-dom';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
+import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
 
 type SortField = 'marketCap' | 'fdv' | 'unlockedPercent';
 type SortDirection = 'asc' | 'desc';
@@ -32,6 +34,14 @@ type SortPreference = { field: SortField; direction: SortDirection };
 const SORT_PREFERENCE_STORAGE_KEY = 'crypto-dashboard:sort-preference';
 const DEFAULT_SORT_PREFERENCE: SortPreference = { field: 'marketCap', direction: 'asc' };
 const TARGET_FDV = 27_500_000_000;
+const TOTAL_SUPPLY_FILTERS = [
+  { label: '1B', value: 1_000_000_000 },
+  { label: '10B', value: 10_000_000_000 }
+] as const;
+type TotalSupplyFilter = (typeof TOTAL_SUPPLY_FILTERS)[number]['value'];
+const UNLOCK_FILTERS = [35, 30, 25, 20] as const;
+type UnlockFilter = (typeof UNLOCK_FILTERS)[number];
+const DEFAULT_UNLOCK_FILTER: UnlockFilter = 35;
 
 type TokenContextMenu = { token: BscAlphaToken; mouseX: number; mouseY: number };
 
@@ -95,15 +105,6 @@ function formatSupply(value: number): string {
   return supplyFormatter.format(value);
 }
 
-function getCoinMarketCapUrl(token: BscAlphaToken): string {
-  const slug =
-    token.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || token.symbol.toLowerCase();
-  return `https://coinmarketcap.com/currencies/${slug}/`;
-}
-
 export function CryptoDashboard() {
   const [tokens, setTokens] = useState<BscAlphaToken[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,6 +114,9 @@ export function CryptoDashboard() {
   const [sortPreference, setSortPreference] = useState(readSortPreference);
   const { isWatchlisted, toggleWatchlist } = useWatchlist();
   const [contextMenu, setContextMenu] = useState<TokenContextMenu | null>(null);
+  const [totalSupplyFilters, setTotalSupplyFilters] = useState<TotalSupplyFilter[]>([]);
+  const [unlockFilter, setUnlockFilter] = useState<UnlockFilter>(DEFAULT_UNLOCK_FILTER);
+  const filtersActive = totalSupplyFilters.length > 0 || unlockFilter !== DEFAULT_UNLOCK_FILTER;
   const { field: sortField, direction: sortDirection } = sortPreference;
   const navigate = useNavigate();
 
@@ -161,9 +165,20 @@ export function CryptoDashboard() {
     );
   }, [sortPreference]);
 
+  const filteredTokens = useMemo(
+    () =>
+      tokens.filter(
+        (token) =>
+          token.unlockedPercent <= unlockFilter &&
+          (totalSupplyFilters.length === 0 ||
+            totalSupplyFilters.some((supply) => token.totalSupply === supply))
+      ),
+    [tokens, totalSupplyFilters, unlockFilter]
+  );
+
   const sortedTokens = useMemo(
     () =>
-      [...tokens].sort((first, second) => {
+      [...filteredTokens].sort((first, second) => {
         const firstValue = first[sortField];
         const secondValue = second[sortField];
         if (firstValue === null) {
@@ -174,8 +189,14 @@ export function CryptoDashboard() {
         }
         return sortDirection === 'asc' ? firstValue - secondValue : secondValue - firstValue;
       }),
-    [sortDirection, sortField, tokens]
+    [filteredTokens, sortDirection, sortField]
   );
+
+  function toggleTotalSupplyFilter(supply: TotalSupplyFilter) {
+    setTotalSupplyFilters((current) =>
+      current.includes(supply) ? current.filter((value) => value !== supply) : [...current, supply]
+    );
+  }
 
   function handleContextMenuOnOverlay(event: ReactMouseEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -254,38 +275,94 @@ export function CryptoDashboard() {
             </Button>
           </Box>
 
-          <Box className="o-crypto-dashboard__list-panel">
-            <Box className="o-crypto-dashboard__list-heading">
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-                {tokens.length > 0 && (
-                  <Typography variant="body2" className="o-crypto-dashboard__list-meta">
-                    {tokens.length} coins match
-                  </Typography>
-                )}
-                {lastUpdated && (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    className="o-crypto-dashboard__list-meta"
-                  >
-                    Updated{' '}
-                    {lastUpdated.toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </Typography>
-                )}
-                {error && tokens.length === 0 && (
-                  <Typography variant="body2" color="text.secondary">
-                    Count unavailable
-                  </Typography>
-                )}
-              </Stack>
+          <Box className="o-crypto-dashboard__list-heading">
+            <Box className="o-crypto-dashboard__filters">
+              <Box
+                role="group"
+                aria-label="Filter by total supply"
+                className="o-crypto-dashboard__quick-filter"
+              >
+                <Typography className="o-crypto-dashboard__quick-filter-label">
+                  Total supply
+                </Typography>
+                <Box className="o-crypto-dashboard__quick-filter-options">
+                  {TOTAL_SUPPLY_FILTERS.map(({ label, value }) => {
+                    const selected = totalSupplyFilters.includes(value);
+                    return (
+                      <Chip
+                        key={value}
+                        label={label}
+                        clickable
+                        aria-pressed={selected}
+                        variant={selected ? 'filled' : 'outlined'}
+                        color={selected ? 'primary' : 'default'}
+                        onClick={() => toggleTotalSupplyFilter(value)}
+                        className="o-crypto-dashboard__quick-filter-chip"
+                      />
+                    );
+                  })}
+                </Box>
+              </Box>
+              <Box
+                role="group"
+                aria-label="Filter by maximum unlock"
+                className="o-crypto-dashboard__quick-filter"
+              >
+                <Typography className="o-crypto-dashboard__quick-filter-label">
+                  Max unlock
+                </Typography>
+                <Box className="o-crypto-dashboard__quick-filter-options">
+                  {UNLOCK_FILTERS.map((value) => {
+                    const selected = unlockFilter === value;
+                    return (
+                      <Chip
+                        key={value}
+                        label={`${value}%`}
+                        clickable
+                        aria-pressed={selected}
+                        variant={selected ? 'filled' : 'outlined'}
+                        color={selected ? 'primary' : 'default'}
+                        onClick={() => setUnlockFilter(value)}
+                        className="o-crypto-dashboard__quick-filter-chip"
+                      />
+                    );
+                  })}
+                </Box>
+              </Box>
+            </Box>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+              {tokens.length > 0 && (
+                <Typography variant="body2" className="o-crypto-dashboard__list-meta">
+                  {filtersActive
+                    ? `${sortedTokens.length} of ${tokens.length} coins match`
+                    : `${tokens.length} coins match`}
+                </Typography>
+              )}
+              {lastUpdated && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  className="o-crypto-dashboard__list-meta"
+                >
+                  Updated{' '}
+                  {lastUpdated.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Typography>
+              )}
+              {error && tokens.length === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  Count unavailable
+                </Typography>
+              )}
               {loading && tokens.length > 0 && (
                 <CircularProgress size={20} aria-label="Refreshing token list" />
               )}
-            </Box>
+            </Stack>
+          </Box>
 
+          <Box className="o-crypto-dashboard__list-panel">
             {error && (
               <Alert
                 severity={tokens.length > 0 ? 'warning' : 'error'}
@@ -300,19 +377,27 @@ export function CryptoDashboard() {
                 <CircularProgress size={28} />
                 <Typography color="text.secondary">Loading Binance Alpha tokens…</Typography>
               </Box>
-            ) : tokens.length > 0 ? (
+            ) : sortedTokens.length > 0 ? (
               <TableContainer className="o-crypto-dashboard__table-wrap">
                 <Table
                   aria-label="Binance Alpha BSC tokens listed in futures but not spot, with unlock of 35 percent or less"
                   className="o-crypto-dashboard__table"
                 >
                   <colgroup>
+                    <col className="o-crypto-dashboard__index-col" />
                     <col span={6} />
                     <col className="o-crypto-dashboard__target-fdv-col" />
                     <col className="o-crypto-dashboard__target-fdv-col" />
                   </colgroup>
                   <TableHead>
                     <TableRow>
+                      <TableCell
+                        align="center"
+                        rowSpan={2}
+                        className="o-crypto-dashboard__index-cell"
+                      >
+                        #
+                      </TableCell>
                       <TableCell rowSpan={2}>Coin</TableCell>
                       <TableCell align="center" rowSpan={2}>
                         Price
@@ -373,7 +458,7 @@ export function CryptoDashboard() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {sortedTokens.map((token) => (
+                    {sortedTokens.map((token, index) => (
                       <TableRow
                         key={token.tokenId}
                         hover
@@ -413,6 +498,9 @@ export function CryptoDashboard() {
                           }
                         }}
                       >
+                        <TableCell align="center" className="o-crypto-dashboard__index-cell">
+                          {index + 1}
+                        </TableCell>
                         <TableCell>
                           <Stack
                             direction="row"
@@ -466,6 +554,13 @@ export function CryptoDashboard() {
                   </TableBody>
                 </Table>
               </TableContainer>
+            ) : tokens.length > 0 ? (
+              <Box className="o-crypto-dashboard__state">
+                <Typography variant="subtitle1">No matching tokens found</Typography>
+                <Typography color="text.secondary">
+                  No tokens match the selected filters.
+                </Typography>
+              </Box>
             ) : error ? null : (
               <Box className="o-crypto-dashboard__state">
                 <Typography variant="subtitle1">No matching tokens found</Typography>
