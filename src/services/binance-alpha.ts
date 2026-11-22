@@ -1,8 +1,4 @@
 import { fetchCoinMarketCapSupplyLookup } from '@/services/coinmarketcap';
-import {
-  fetchFuturesUnlockedPercent,
-  fetchFuturesUnlockedPercents
-} from '@/services/futures-token-info';
 
 const TOKEN_LIST_ENDPOINT =
   'https://www.binance.com/bapi/defi/v1/public/wallet-direct/buw/wallet/cex/alpha/all/token/list';
@@ -143,10 +139,9 @@ export async function fetchBscAlphaTokenMetrics(
   }
 
   const baseAsset = normalizedSymbol.replace(/(?:USDT|USDC)$/, '');
-  const [payload, findCoinMarketCapSupply, futuresUnlockedPercent] = await Promise.all([
+  const [payload, findCoinMarketCapSupply] = await Promise.all([
     fetchJson(TOKEN_LIST_ENDPOINT, signal),
-    fetchCoinMarketCapSupplyLookup(signal).catch(() => null),
-    fetchFuturesUnlockedPercent(baseAsset, signal).catch(() => null)
+    fetchCoinMarketCapSupplyLookup(signal).catch(() => null)
   ]);
   if (!isRecord(payload) || payload.code !== '000000' || !Array.isArray(payload.data)) {
     throw new Error('Binance returned an unexpected Alpha token list response.');
@@ -162,20 +157,15 @@ export async function fetchBscAlphaTokenMetrics(
   }
 
   const [token] = matches;
-  const coinMarketCapSupply =
+  const cmcSlug =
     token.name && token.contractAddress
       ? (findCoinMarketCapSupply?.({
           symbol: token.symbol,
           name: token.name,
           contractAddress: token.contractAddress
-        }) ?? null)
+        })?.slug ?? null)
       : null;
-  return {
-    ...token,
-    cmcSlug: coinMarketCapSupply?.slug ?? null,
-    unlockedPercent:
-      futuresUnlockedPercent ?? coinMarketCapSupply?.unlockedPercent ?? token.unlockedPercent
-  };
+  return { ...token, cmcSlug };
 }
 
 async function fetchJson(url: string, signal?: AbortSignal): Promise<unknown> {
@@ -272,18 +262,10 @@ export async function fetchBscAlphaTokens(signal?: AbortSignal): Promise<BscAlph
       return [{ ...token, futuresSymbol }];
     });
 
-  const futuresUnlockedPercents = await fetchFuturesUnlockedPercents(
-    candidates.map((token) => token.symbol),
-    signal
-  );
-
   return candidates
     .flatMap((token): BscAlphaToken[] => {
       const coinMarketCapSupply = findCoinMarketCapSupply(token);
-      const { circulatingSupply, totalSupply } = coinMarketCapSupply ?? token;
-      const unlockedPercent =
-        futuresUnlockedPercents.get(token.symbol.toUpperCase()) ??
-        (coinMarketCapSupply ?? token).unlockedPercent;
+      const { circulatingSupply, totalSupply, unlockedPercent } = coinMarketCapSupply ?? token;
       if (
         circulatingSupply === null ||
         totalSupply === null ||

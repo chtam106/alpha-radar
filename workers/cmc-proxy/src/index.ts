@@ -1,4 +1,3 @@
-import { FUTURES_TOKEN_SYMBOL_PATTERN, fetchFuturesTokenSupply } from './futures-token-info.ts';
 import { fetchCmcSupplyListing } from './listing.ts';
 
 const CACHE_TTL_SECONDS = 300;
@@ -8,36 +7,8 @@ const CORS_HEADERS = {
   'Access-Control-Max-Age': '86400'
 };
 
-interface Route {
-  cacheKey: string;
-  load: () => Promise<unknown>;
-}
-
 function jsonError(message: string, status: number): Response {
   return Response.json({ error: message }, { status, headers: CORS_HEADERS });
-}
-
-function resolveRoute(url: URL): Route | Response {
-  if (url.pathname === '/cmc-listing') {
-    return {
-      cacheKey: `${url.origin}${url.pathname}`,
-      load: async () => ({ coins: await fetchCmcSupplyListing() })
-    };
-  }
-
-  if (url.pathname === '/futures-token-info') {
-    const symbol = url.searchParams.get('symbol')?.toUpperCase() ?? '';
-    if (!FUTURES_TOKEN_SYMBOL_PATTERN.test(symbol)) {
-      return jsonError('Invalid symbol', 400);
-    }
-
-    return {
-      cacheKey: `${url.origin}${url.pathname}?symbol=${symbol}`,
-      load: async () => ({ token: await fetchFuturesTokenSupply(symbol) })
-    };
-  }
-
-  return jsonError('Not found', 404);
 }
 
 export default {
@@ -50,29 +21,36 @@ export default {
       return jsonError('Method not allowed', 405);
     }
 
-    const route = resolveRoute(new URL(request.url));
-    if (route instanceof Response) {
-      return route;
+    const url = new URL(request.url);
+    if (url.pathname !== '/cmc-listing') {
+      return jsonError('Not found', 404);
     }
 
-    const cacheKey = new Request(route.cacheKey);
-    const cache = await caches.open('cmc-proxy');
+    const cacheKey = new Request(`${url.origin}${url.pathname}`);
+    const cache = await caches.open('cmc-listing');
     const cachedResponse = await cache.match(cacheKey);
     if (cachedResponse) {
       return cachedResponse;
     }
 
     try {
-      const response = Response.json(await route.load(), {
-        headers: {
-          ...CORS_HEADERS,
-          'Cache-Control': `public, max-age=${CACHE_TTL_SECONDS}`
+      const coins = await fetchCmcSupplyListing();
+      const response = Response.json(
+        { coins },
+        {
+          headers: {
+            ...CORS_HEADERS,
+            'Cache-Control': `public, max-age=${CACHE_TTL_SECONDS}`
+          }
         }
-      });
+      );
       await cache.put(cacheKey, response.clone());
       return response;
     } catch (error) {
-      return jsonError(error instanceof Error ? error.message : 'Upstream request failed.', 502);
+      return jsonError(
+        error instanceof Error ? error.message : 'CoinMarketCap request failed.',
+        502
+      );
     }
   }
 };
