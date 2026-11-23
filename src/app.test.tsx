@@ -37,7 +37,7 @@ describe('application routes', () => {
     renderAt('/');
 
     expect(await screen.findByText('home page test content')).toBeInTheDocument();
-    await waitFor(() => expect(document.title).toBe('Alpha Radar | Binance'));
+    await waitFor(() => expect(document.title).toBe('Alpha Radar | Binance Alpha BSC Futures'));
   });
 
   it.each(['/alpha-radar', '/alpha-bsc', '/unknown-route'])(
@@ -65,6 +65,6 @@ describe('application routes', () => {
     expect(await screen.findByText('home page test content')).toBeInTheDocument();
     expect(await screen.findByText('/')).toBeInTheDocument();
     expect(screen.queryByText('chart page test content')).not.toBeInTheDocument();
-    await waitFor(() => expect(document.title).toBe('Alpha Radar | Binance'));
+    await waitFor(() => expect(document.title).toBe('Alpha Radar | Binance Alpha BSC Futures'));
   });
 });
