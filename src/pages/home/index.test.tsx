@@ -264,6 +264,24 @@ describe('Home page', () => {
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
   });
 
+  it('highlights the selected unlock endpoints as they change', async () => {
+    fetchBscAlphaTokensMock.mockResolvedValue(tokens);
+    renderHome();
+
+    await screen.findByRole('table');
+    const unlockGroup = within(screen.getByRole('group', { name: 'Filter by unlock range' }));
+    const selectedClass = 'p-crypto-dashboard__unlock-mark-value--selected';
+    expect(unlockGroup.getByText('0%')).toHaveClass(selectedClass);
+    expect(unlockGroup.getByText('35%')).toHaveClass(selectedClass);
+    expect(unlockGroup.getByText('5%')).not.toHaveClass(selectedClass);
+
+    fireEvent.keyDown(screen.getByRole('slider', { name: 'Minimum unlock' }), {
+      key: 'ArrowRight'
+    });
+    expect(unlockGroup.getByText('0%')).not.toHaveClass(selectedClass);
+    expect(unlockGroup.getByText('5%')).toHaveClass(selectedClass);
+  });
+
   it('saves and restores total supply and unlock filters', async () => {
     fetchBscAlphaTokensMock.mockResolvedValue(tokens);
     const { unmount } = renderHome();

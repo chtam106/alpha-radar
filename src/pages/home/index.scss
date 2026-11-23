@@ -139,7 +139,25 @@
     font-size: 0.75rem;
   }
 
+  &__unlock-slider &__unlock-tick {
+    &[data-index='0'],
+    &[data-index='7'] {
+      display: none;
+    }
+  }
+
+  &__unlock-mark-value--selected {
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  &__unlock-slider &__unlock-control {
+    height: 6px;
+    pointer-events: none;
+  }
+
   &__unlock-slider &__unlock-thumb {
+    pointer-events: auto;
     transition: box-shadow 150ms ease;
   }
 

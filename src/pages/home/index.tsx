@@ -289,15 +289,27 @@ function UnlockRangeSlider({
   return (
     <Box className="p-crypto-dashboard__unlock-slider" onKeyDownCapture={handleKeyDown}>
       <Slider
+        className="p-crypto-dashboard__unlock-control"
         value={range}
         min={0}
         max={35}
         step={0.1}
         marks={[...MIN_UNLOCK_FILTERS, DEFAULT_UNLOCK_FILTER].map((value) => ({
           value,
-          label: `${value}%`
+          label: (
+            <span
+              className={`p-crypto-dashboard__unlock-mark-value${
+                range.some((endpoint) => Math.round(endpoint / 5) * 5 === value)
+                  ? ' p-crypto-dashboard__unlock-mark-value--selected'
+                  : ''
+              }`}
+            >
+              {value}%
+            </span>
+          )
         }))}
         slotProps={{
+          mark: { className: 'p-crypto-dashboard__unlock-tick' },
           markLabel: { className: 'p-crypto-dashboard__unlock-mark' },
           thumb: { className: 'p-crypto-dashboard__unlock-thumb' },
           track: { className: 'p-crypto-dashboard__unlock-track' }
