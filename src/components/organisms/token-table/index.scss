@@ -19,6 +19,14 @@
 
   &__sort-control {
     width: min(100%, 220px);
+
+    label[data-shrink='true'] {
+      font-size: calc(4rem / 3);
+    }
+
+    legend {
+      font-size: 1rem;
+    }
   }
 
   &__table {
@@ -165,7 +173,7 @@
     &__card-index,
     &__card-label {
       color: #84929f;
-      font-size: 0.75rem;
+      font-size: 1rem;
       line-height: 1.35;
     }
 
@@ -190,7 +198,7 @@
       display: block;
       margin: 0;
       color: #eaecef;
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       line-height: 1.4;

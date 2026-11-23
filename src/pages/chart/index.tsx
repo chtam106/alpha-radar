@@ -277,6 +277,7 @@ export function CoinChartPage() {
       layout: {
         background: { type: ColorType.Solid, color: '#181a20' },
         textColor: '#9ba8b5',
+        fontSize: 16,
         attributionLogo: true
       },
       grid: {
