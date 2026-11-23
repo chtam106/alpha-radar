@@ -45,6 +45,7 @@ type SortPreference = {
 
 const SORT_PREFERENCE_STORAGE_KEY = 'crypto-dashboard:sort-preference';
 const FILTER_PREFERENCE_STORAGE_KEY = 'crypto-dashboard:filter-preference';
+const FILTER_LOADING_MINIMUM_MS = 600;
 const DEFAULT_SORT_PREFERENCE: SortPreference = { field: 'marketCap', direction: 'asc' };
 const TOTAL_SUPPLY_FILTERS = [
   { label: '1B', value: 1_000_000_000 },
@@ -355,6 +356,7 @@ export function HomePage() {
   const [sortPreference, setSortPreference] = useState(readSortPreference);
   const [filterPreference, setFilterPreference] = useState(readFilterPreference);
   const [filterPending, startFilterTransition] = useTransition();
+  const [filterLoading, setFilterLoading] = useState<number | null>(null);
   const { isWatchlisted, toggleWatchlist, feedback, clearFeedback } = useWatchlist();
   const [contextMenu, setContextMenu] = useState<TokenContextMenuState | null>(null);
   const { totalSupplyFilters, minUnlockFilter, maxUnlockFilter } = filterPreference;
@@ -363,6 +365,13 @@ export function HomePage() {
     minUnlockFilter !== DEFAULT_MIN_UNLOCK_FILTER ||
     maxUnlockFilter !== DEFAULT_UNLOCK_FILTER;
   const { field: sortField, direction: sortDirection } = sortPreference;
+  useEffect(() => {
+    if (filterLoading === null) return;
+
+    const timer = window.setTimeout(() => setFilterLoading(null), FILTER_LOADING_MINIMUM_MS);
+    return () => window.clearTimeout(timer);
+  }, [filterLoading]);
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -452,8 +461,13 @@ export function HomePage() {
     [sortedTokens]
   );
 
+  function applyFilter(update: () => void) {
+    setFilterLoading((current) => (current ?? 0) + 1);
+    startFilterTransition(update);
+  }
+
   function resetFilters() {
-    startFilterTransition(() => setFilterPreference({ ...DEFAULT_FILTER_PREFERENCE }));
+    applyFilter(() => setFilterPreference({ ...DEFAULT_FILTER_PREFERENCE }));
   }
 
   const openTokenMenu = useCallback(
@@ -542,7 +556,7 @@ export function HomePage() {
               <TotalSupplyFilter
                 value={totalSupplyFilters}
                 onChange={(value) => {
-                  startFilterTransition(() => {
+                  applyFilter(() => {
                     setFilterPreference((current) => ({ ...current, totalSupplyFilters: value }));
                   });
                 }}
@@ -559,7 +573,7 @@ export function HomePage() {
                     maximum={maxUnlockFilter}
                     onChange={(minimum, maximum) => {
                       if (minimum !== minUnlockFilter || maximum !== maxUnlockFilter) {
-                        startFilterTransition(() => {
+                        applyFilter(() => {
                           setFilterPreference((current) => ({
                             ...current,
                             minUnlockFilter: minimum,
@@ -697,7 +711,7 @@ export function HomePage() {
             onContextMenuOverlay={handleContextMenuOnOverlay}
           />
           <WatchlistFeedback feedback={feedback} onClose={clearFeedback} />
-          {((refreshKey > 0 && loading) || filterPending) && (
+          {((refreshKey > 0 && loading) || filterPending || filterLoading !== null) && (
             <Dialog
               open
               slotProps={{
