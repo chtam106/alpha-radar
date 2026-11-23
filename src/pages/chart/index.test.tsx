@@ -131,6 +131,10 @@ describe('Chart page', () => {
       expect.any(AbortSignal)
     );
     await waitFor(() => expect(chartMocks.createChart).toHaveBeenCalledTimes(1));
+    expect(chartMocks.createChart).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ layout: expect.objectContaining({ fontSize: 16 }) })
+    );
     await waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
     expect(MockWebSocket.instances[0].url).toContain('alphausdt@kline_1h');
 

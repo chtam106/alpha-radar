@@ -97,7 +97,7 @@
 
   &__quick-filter-label {
     color: #eaecef;
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     line-height: 1.4;
@@ -123,18 +123,12 @@
 
   &__unlock-filter {
     max-width: 520px;
-    padding-bottom: 20px;
-
-    @media (width > 600px) {
-      .p-crypto-dashboard__quick-filter-label {
-        transform: translateY(2px);
-      }
-    }
   }
 
   &__unlock-range {
     width: 100%;
     min-width: 0;
+    padding-top: 24px;
   }
 
   &__unlock-slider {
@@ -142,7 +136,9 @@
   }
 
   &__unlock-slider &__unlock-mark {
-    font-size: 0.75rem;
+    top: auto;
+    bottom: calc(100% - 2px);
+    font-size: 1rem;
   }
 
   &__unlock-slider &__unlock-tick {
@@ -153,7 +149,7 @@
   }
 
   &__unlock-mark-value--selected {
-    font-size: 0.875rem;
+    font-size: 1.0625rem;
     font-weight: 700;
   }
 
