@@ -1,6 +1,6 @@
 .p-crypto-dashboard {
   padding-top: 24px;
-  padding-bottom: 64px;
+  padding-bottom: 60px;
 
   &__main {
     padding: 48px 0 36px;
@@ -201,6 +201,7 @@
 
   @media (width <= 600px) {
     padding-top: 16px;
+    padding-bottom: 44px;
 
     &__main {
       padding-top: 34px;
