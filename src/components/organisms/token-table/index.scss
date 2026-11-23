@@ -229,6 +229,8 @@
     }
 
     &__metrics {
+      grid-auto-flow: column;
+      grid-template-rows: repeat(3, auto);
       padding-bottom: 14px;
       border-bottom: 1px solid rgb(255 255 255 / 8%);
     }
@@ -246,6 +248,11 @@
       &__detail-list {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         column-gap: 48px;
+      }
+
+      &__metrics {
+        grid-auto-flow: row;
+        grid-template-rows: none;
       }
     }
   }
