@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
 import { fetchCmcSupplyListing } from './workers/cmc-proxy/src/listing.ts';
 
-const repositoryName = 'crypto';
+const repositoryName = 'alpha-radar';
 
 function cmcListingDevProxy(): Plugin {
   return {

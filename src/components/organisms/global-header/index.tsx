@@ -6,11 +6,16 @@ export function GlobalHeader() {
     <Box component="header" className="o-global-header">
       <Container maxWidth="lg" className="o-global-header__inner">
         <Link to="/" className="o-global-header__brand">
+          <Box
+            component="img"
+            src={`${import.meta.env.BASE_URL}favicon.svg`}
+            alt=""
+            className="o-global-header__logo"
+          />
           <Typography component="span" variant="subtitle1" className="o-global-header__brand-name">
-            Crypto Desk
+            Alpha Radar
           </Typography>
         </Link>
-
         <Stack
           component="nav"
           direction="row"
@@ -24,12 +29,6 @@ export function GlobalHeader() {
             className={({ isActive }) => `o-global-header__link${isActive ? ' is-active' : ''}`}
           >
             Home
-          </NavLink>
-          <NavLink
-            to="/alpha-radar"
-            className={({ isActive }) => `o-global-header__link${isActive ? ' is-active' : ''}`}
-          >
-            High-Risk Alpha Radar
           </NavLink>
           <NavLink
             to="/watchlist"

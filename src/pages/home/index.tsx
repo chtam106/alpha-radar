@@ -1,42 +1,408 @@
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
-import { Box, Button, Container, Paper, Stack, Typography } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Container,
+  Stack,
+  Typography
+} from '@mui/material';
+import { type MouseEvent as ReactMouseEvent, useEffect, useMemo, useState } from 'react';
+import { useWatchlist } from '@/hooks/use-watchlist';
+import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
+import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
+import { TokenContextMenu } from '@/components/molecules/token-context-menu';
+import {
+  TokenTable,
+  type TokenTableRowData,
+  type TokenTableSortDirection,
+  type TokenTableSortField
+} from '@/components/organisms/token-table';
+
+type SortPreference = {
+  field: TokenTableSortField;
+  direction: TokenTableSortDirection;
+};
+
+const SORT_PREFERENCE_STORAGE_KEY = 'crypto-dashboard:sort-preference';
+const DEFAULT_SORT_PREFERENCE: SortPreference = { field: 'marketCap', direction: 'asc' };
+const TOTAL_SUPPLY_FILTERS = [
+  { label: '1B', value: 1_000_000_000 },
+  { label: '10B', value: 10_000_000_000 }
+] as const;
+type TotalSupplyFilter = (typeof TOTAL_SUPPLY_FILTERS)[number]['value'];
+const UNLOCK_FILTERS = [35, 30, 25, 20] as const;
+type UnlockFilter = (typeof UNLOCK_FILTERS)[number];
+const DEFAULT_UNLOCK_FILTER: UnlockFilter = 35;
+
+type TokenContextMenuState = { token: BscAlphaToken; mouseX: number; mouseY: number };
+
+function isSortField(value: string | undefined): value is TokenTableSortField {
+  return value === 'marketCap' || value === 'fdv' || value === 'unlockedPercent';
+}
+
+function isSortDirection(value: string | undefined): value is TokenTableSortDirection {
+  return value === 'asc' || value === 'desc';
+}
+
+function readSortPreference(): SortPreference {
+  if (typeof window === 'undefined') {
+    return DEFAULT_SORT_PREFERENCE;
+  }
+
+  const savedPreference = window.localStorage.getItem(SORT_PREFERENCE_STORAGE_KEY);
+  if (!savedPreference) {
+    return DEFAULT_SORT_PREFERENCE;
+  }
+
+  const [field, direction, ...extra] = savedPreference.split(':');
+  if (extra.length === 0 && isSortField(field) && isSortDirection(direction)) {
+    return { field, direction };
+  }
+
+  return DEFAULT_SORT_PREFERENCE;
+}
 
 export function HomePage() {
-  return (
-    <Container maxWidth="lg" className="p-home-page">
-      <Box component="main" className="p-home-page__main">
-        <Stack spacing={4}>
-          <Box className="p-home-page__intro">
-            <Typography variant="overline" color="primary">
-              CRYPTO DESK
-            </Typography>
-            <Typography variant="h1" sx={{ mt: 1, fontSize: { xs: 34, sm: 46 } }}>
-              Research workspace
-            </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1 }}>
-              A home for crypto research tools and market dashboards.
-            </Typography>
-          </Box>
+  const [tokens, setTokens] = useState<BscAlphaToken[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [sortPreference, setSortPreference] = useState(readSortPreference);
+  const { isWatchlisted, toggleWatchlist } = useWatchlist();
+  const [contextMenu, setContextMenu] = useState<TokenContextMenuState | null>(null);
+  const [totalSupplyFilters, setTotalSupplyFilters] = useState<TotalSupplyFilter[]>([]);
+  const [unlockFilter, setUnlockFilter] = useState<UnlockFilter>(DEFAULT_UNLOCK_FILTER);
+  const filtersActive = totalSupplyFilters.length > 0 || unlockFilter !== DEFAULT_UNLOCK_FILTER;
+  const { field: sortField, direction: sortDirection } = sortPreference;
+  useEffect(() => {
+    const controller = new AbortController();
 
-          <Paper component="section" elevation={0} className="p-home-page__dashboard-card">
-            <Box>
-              <Typography variant="h2" sx={{ fontSize: 24 }}>
+    async function loadTokens() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await fetchBscAlphaTokens(controller.signal);
+        setTokens(result);
+        setLastUpdated(new Date());
+      } catch (loadError) {
+        if (!controller.signal.aborted) {
+          setError(
+            loadError instanceof Error ? loadError.message : 'Unable to load Binance Alpha tokens.'
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadTokens();
+    return () => controller.abort();
+  }, [refreshKey]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      SORT_PREFERENCE_STORAGE_KEY,
+      `${sortPreference.field}:${sortPreference.direction}`
+    );
+  }, [sortPreference]);
+
+  const filteredTokens = useMemo(
+    () =>
+      tokens.filter(
+        (token) =>
+          token.unlockedPercent <= unlockFilter &&
+          (totalSupplyFilters.length === 0 ||
+            totalSupplyFilters.some((supply) => token.totalSupply === supply))
+      ),
+    [tokens, totalSupplyFilters, unlockFilter]
+  );
+
+  const sortedTokens = useMemo(
+    () =>
+      [...filteredTokens].sort((first, second) => {
+        const firstValue = first[sortField];
+        const secondValue = second[sortField];
+        if (firstValue === null) {
+          return secondValue === null ? 0 : 1;
+        }
+        if (secondValue === null) {
+          return -1;
+        }
+        return sortDirection === 'asc' ? firstValue - secondValue : secondValue - firstValue;
+      }),
+    [filteredTokens, sortDirection, sortField]
+  );
+
+  const tableRows = useMemo<TokenTableRowData[]>(
+    () =>
+      sortedTokens.map((token) => ({
+        id: token.tokenId,
+        futuresSymbol: token.futuresSymbol,
+        symbol: token.symbol,
+        name: token.name,
+        iconUrl: token.iconUrl,
+        price: token.price,
+        marketCap: token.marketCap,
+        fdv: token.fdv,
+        totalSupply: token.totalSupply,
+        unlockedPercent: token.unlockedPercent,
+        circulatingSupply: token.circulatingSupply
+      })),
+    [sortedTokens]
+  );
+
+  function toggleTotalSupplyFilter(supply: TotalSupplyFilter) {
+    setTotalSupplyFilters((current) =>
+      current.includes(supply) ? current.filter((value) => value !== supply) : [...current, supply]
+    );
+  }
+
+  function openTokenMenu(futuresSymbol: string, mouseX: number, mouseY: number) {
+    const token = sortedTokens.find((candidate) => candidate.futuresSymbol === futuresSymbol);
+    if (token) {
+      setContextMenu({ token, mouseX, mouseY });
+    }
+  }
+
+  function handleContextMenuOnOverlay(event: ReactMouseEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const paper = document.querySelector<HTMLElement>('.m-token-context-menu__paper');
+    const backdrop = document.querySelector<HTMLElement>('.m-token-context-menu__backdrop');
+    const paperPointerEvents = paper?.style.pointerEvents;
+    const backdropPointerEvents = backdrop?.style.pointerEvents;
+    const row = (() => {
+      try {
+        if (paper) {
+          paper.style.pointerEvents = 'none';
+        }
+        if (backdrop) {
+          backdrop.style.pointerEvents = 'none';
+        }
+        return (
+          document
+            .elementFromPoint(event.clientX, event.clientY)
+            ?.closest<HTMLElement>('[data-futures-symbol]') ?? null
+        );
+      } finally {
+        if (paper) {
+          paper.style.pointerEvents = paperPointerEvents ?? '';
+        }
+        if (backdrop) {
+          backdrop.style.pointerEvents = backdropPointerEvents ?? '';
+        }
+      }
+    })();
+
+    const symbol = row?.dataset.futuresSymbol;
+    const token = sortedTokens.find((candidate) => candidate.futuresSymbol === symbol);
+    if (token && token.futuresSymbol !== contextMenu?.token.futuresSymbol) {
+      openTokenMenu(token.futuresSymbol, event.clientX, event.clientY);
+    } else if (!token) {
+      setContextMenu(null);
+    }
+  }
+
+  function handleSort(field: TokenTableSortField) {
+    setSortPreference((current) =>
+      current.field === field
+        ? { field, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+        : { field, direction: field === 'unlockedPercent' ? 'asc' : 'desc' }
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" className="p-crypto-dashboard">
+      <Box component="main" className="p-crypto-dashboard__main">
+        <Stack spacing={3}>
+          <Box className="p-crypto-dashboard__intro">
+            <Box className="p-crypto-dashboard__intro-copy">
+              <Typography variant="h1" sx={{ mt: 0.5, fontSize: { xs: 34, sm: 46 } }}>
                 High-Risk Alpha Radar
               </Typography>
-              <Typography color="text.secondary" sx={{ mt: 1 }}>
-                Review Binance Alpha tokens on BNB Smart Chain that match the current filters.
+              <Typography
+                color="text.secondary"
+                sx={{ mt: 1 }}
+                className="p-crypto-dashboard__description"
+              >
+                Binance Alpha on BSC · Futures only, no Spot, ≤35% circulating supply. Speculative
+                research; scams and rug pulls are possible.
               </Typography>
             </Box>
             <Button
-              component={RouterLink}
-              to="/alpha-radar"
-              variant="contained"
-              endIcon={<ArrowForwardRoundedIcon />}
+              variant="outlined"
+              startIcon={<RefreshRoundedIcon />}
+              onClick={() => setRefreshKey((key) => key + 1)}
+              disabled={loading}
+              className="p-crypto-dashboard__refresh"
             >
-              Open dashboard
+              Refresh
             </Button>
-          </Paper>
+          </Box>
+
+          <Box className="p-crypto-dashboard__list-heading">
+            <Box className="p-crypto-dashboard__filters">
+              <Box
+                role="group"
+                aria-label="Filter by total supply"
+                className="p-crypto-dashboard__quick-filter"
+              >
+                <Typography className="p-crypto-dashboard__quick-filter-label">
+                  Total supply
+                </Typography>
+                <Box className="p-crypto-dashboard__quick-filter-options">
+                  <Chip
+                    label="All"
+                    clickable
+                    aria-pressed={totalSupplyFilters.length === 0}
+                    variant={totalSupplyFilters.length === 0 ? 'filled' : 'outlined'}
+                    color={totalSupplyFilters.length === 0 ? 'primary' : 'default'}
+                    onClick={() => setTotalSupplyFilters([])}
+                    className="p-crypto-dashboard__quick-filter-chip"
+                  />
+                  {TOTAL_SUPPLY_FILTERS.map(({ label, value }) => {
+                    const selected = totalSupplyFilters.includes(value);
+                    return (
+                      <Chip
+                        key={value}
+                        label={label}
+                        clickable
+                        aria-pressed={selected}
+                        variant={selected ? 'filled' : 'outlined'}
+                        color={selected ? 'primary' : 'default'}
+                        onClick={() => toggleTotalSupplyFilter(value)}
+                        className="p-crypto-dashboard__quick-filter-chip"
+                      />
+                    );
+                  })}
+                </Box>
+              </Box>
+              <Box
+                role="group"
+                aria-label="Filter by maximum unlock"
+                className="p-crypto-dashboard__quick-filter"
+              >
+                <Typography className="p-crypto-dashboard__quick-filter-label">
+                  Max unlock
+                </Typography>
+                <Box className="p-crypto-dashboard__quick-filter-options">
+                  {UNLOCK_FILTERS.map((value) => {
+                    const selected = unlockFilter === value;
+                    return (
+                      <Chip
+                        key={value}
+                        label={`${value}%`}
+                        clickable
+                        aria-pressed={selected}
+                        variant={selected ? 'filled' : 'outlined'}
+                        color={selected ? 'primary' : 'default'}
+                        onClick={() => setUnlockFilter(value)}
+                        className="p-crypto-dashboard__quick-filter-chip"
+                      />
+                    );
+                  })}
+                </Box>
+              </Box>
+            </Box>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+              {tokens.length > 0 && (
+                <Typography variant="body2" className="p-crypto-dashboard__list-meta">
+                  {filtersActive
+                    ? `${sortedTokens.length} of ${tokens.length} coins match`
+                    : `${tokens.length} coins match`}
+                </Typography>
+              )}
+              {lastUpdated && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  className="p-crypto-dashboard__list-meta"
+                >
+                  Updated{' '}
+                  {lastUpdated.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Typography>
+              )}
+              {error && tokens.length === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  Count unavailable
+                </Typography>
+              )}
+              {loading && tokens.length > 0 && (
+                <CircularProgress size={20} aria-label="Refreshing token list" />
+              )}
+            </Stack>
+          </Box>
+
+          <Box className="p-crypto-dashboard__list-panel">
+            {error && (
+              <Alert
+                severity={tokens.length > 0 ? 'warning' : 'error'}
+                className="p-crypto-dashboard__alert"
+              >
+                {error}
+              </Alert>
+            )}
+
+            {loading && tokens.length === 0 ? (
+              <Box className="p-crypto-dashboard__state">
+                <CircularProgress size={28} />
+                <Typography color="text.secondary">Loading Binance Alpha tokens…</Typography>
+              </Box>
+            ) : sortedTokens.length > 0 ? (
+              <TokenTable
+                ariaLabel="Binance Alpha BSC tokens listed in futures but not spot, with unlock of 35 percent or less"
+                rows={tableRows}
+                sort={{ field: sortField, direction: sortDirection, onChange: handleSort }}
+                onOpenMenu={openTokenMenu}
+              />
+            ) : tokens.length > 0 ? (
+              <Box className="p-crypto-dashboard__state">
+                <Typography variant="subtitle1">No matching tokens found</Typography>
+                <Typography color="text.secondary">
+                  No tokens match the selected filters.
+                </Typography>
+              </Box>
+            ) : error ? null : (
+              <Box className="p-crypto-dashboard__state">
+                <Typography variant="subtitle1">No matching tokens found</Typography>
+                <Typography color="text.secondary">
+                  No active BSC Alpha tokens currently meet the 35% unlock threshold.
+                </Typography>
+              </Box>
+            )}
+          </Box>
+          <TokenContextMenu
+            token={
+              contextMenu
+                ? {
+                    name: contextMenu.token.name,
+                    futuresSymbol: contextMenu.token.futuresSymbol,
+                    coinMarketCapUrl: getCoinMarketCapUrl(contextMenu.token),
+                    isWatchlisted: isWatchlisted(contextMenu.token.futuresSymbol)
+                  }
+                : null
+            }
+            anchorPosition={
+              contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : null
+            }
+            openChartInNewTab
+            onClose={() => setContextMenu(null)}
+            onToggleWatchlist={() => {
+              if (contextMenu) {
+                toggleWatchlist(contextMenu.token.futuresSymbol);
+              }
+            }}
+            onContextMenuOverlay={handleContextMenuOnOverlay}
+          />
         </Stack>
       </Box>
     </Container>

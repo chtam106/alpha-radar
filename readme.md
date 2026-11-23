@@ -1,6 +1,6 @@
-# Crypto Desk
+# Alpha Radar
 
-A React and TypeScript workspace scaffold for a cryptocurrency market dashboard.
+A React and TypeScript dashboard for researching Binance Alpha tokens.
 
 See [.github/copilot-instructions.md](./.github/copilot-instructions.md) for project conventions.
 

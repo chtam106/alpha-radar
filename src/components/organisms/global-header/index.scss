@@ -15,13 +15,24 @@
   }
 
   &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     color: #f2f5f7;
     text-decoration: none;
+    white-space: nowrap;
   }
 
   &__brand-name {
     font-weight: 700;
     letter-spacing: -0.02em;
+  }
+
+  &__logo {
+    display: block;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
   }
 
   &__link {
@@ -52,15 +63,14 @@
 
   @media (width <= 600px) {
     &__inner {
-      align-items: flex-start;
-      flex-direction: column;
       gap: 8px;
-      padding-top: 12px;
-      padding-bottom: 12px;
+      padding-top: 8px;
+      padding-bottom: 8px;
     }
 
     &__nav {
       flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     &__link {

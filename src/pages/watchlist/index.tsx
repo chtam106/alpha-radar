@@ -179,7 +179,7 @@ export function WatchlistPage() {
               </Typography>
               <Button
                 variant="outlined"
-                onClick={() => navigate('/alpha-radar')}
+                onClick={() => navigate('/')}
                 className="p-watchlist-page__browse-button"
               >
                 Browse Alpha Radar
