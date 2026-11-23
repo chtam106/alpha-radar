@@ -1,12 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { TokenContextMenu } from './index';
-
-function CurrentPath() {
-  const { pathname } = useLocation();
-  return <output>{pathname}</output>;
-}
 
 const token = {
   name: 'Alpha Token',
@@ -27,7 +22,6 @@ function renderMenu(props: {
         anchorPosition={{ top: 100, left: 100 }}
         onContextMenuOverlay={vi.fn()}
       />
-      <CurrentPath />
     </MemoryRouter>
   );
 }
@@ -48,7 +42,6 @@ describe('TokenContextMenu', () => {
           onToggleWatchlist={onToggleWatchlist}
           onContextMenuOverlay={vi.fn()}
         />
-        <CurrentPath />
       </MemoryRouter>
     );
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Add to watchlist' }));
@@ -57,7 +50,7 @@ describe('TokenContextMenu', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
-  it('routes to the encoded chart symbol and provides safe external research links', async () => {
+  it('hides the chart action and provides safe external research links', async () => {
     const { rerender } = renderMenu({ token: null, onClose: vi.fn(), onToggleWatchlist: vi.fn() });
     rerender(
       <MemoryRouter initialEntries={['/']}>
@@ -68,10 +61,10 @@ describe('TokenContextMenu', () => {
           onToggleWatchlist={vi.fn()}
           onContextMenuOverlay={vi.fn()}
         />
-        <CurrentPath />
       </MemoryRouter>
     );
 
+    expect(screen.queryByRole('menuitem', { name: 'Open chart' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Binance Futures' })).toHaveAttribute(
       'href',
       'https://www.binance.com/en/futures/ALPHA%2FUSDT'
@@ -86,8 +79,5 @@ describe('TokenContextMenu', () => {
         'noopener noreferrer'
       );
     }
-
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Open chart' }));
-    await waitFor(() => expect(screen.getByText('/chart/ALPHA%2FUSDT')).toBeInTheDocument());
   });
 });

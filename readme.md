@@ -33,6 +33,12 @@ Variables) to `https://<worker>.workers.dev/cmc-listing`. Locally, set `VITE_CMC
 pnpm storybook
 ```
 
+## Feature flags
+
+The Futures chart is temporarily disabled by `ENABLE_CHART_PAGE` in
+[src/config/feature-flags.ts](./src/config/feature-flags.ts). Set it to `true` to restore the chart
+route and context-menu action together.
+
 ## Validation
 
 ```powershell

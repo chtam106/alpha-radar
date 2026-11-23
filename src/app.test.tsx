@@ -8,7 +8,6 @@ vi.mock('react-dom/client', () => ({
   createRoot: vi.fn(() => ({ render: rootRenderMock }))
 }));
 vi.mock('@/pages/home', () => ({ HomePage: () => <div>home page test content</div> }));
-vi.mock('@/pages/chart', () => ({ CoinChartPage: () => <div>chart page test content</div> }));
 vi.mock('@/pages/watchlist', () => ({
   WatchlistPage: () => <div>watchlist page test content</div>
 }));
@@ -60,10 +59,12 @@ describe('application routes', () => {
     await waitFor(() => expect(document.title).toBe('Watchlist | Alpha Radar'));
   });
 
-  it('loads a chart route and applies its symbol title', async () => {
+  it('redirects the temporarily hidden chart route to Home', async () => {
     renderAt('/chart/alphausdt');
 
-    expect(await screen.findByText('chart page test content')).toBeInTheDocument();
-    await waitFor(() => expect(document.title).toBe('ALPHAUSDT | Binance Futures'));
+    expect(await screen.findByText('home page test content')).toBeInTheDocument();
+    expect(await screen.findByText('/')).toBeInTheDocument();
+    expect(screen.queryByText('chart page test content')).not.toBeInTheDocument();
+    await waitFor(() => expect(document.title).toBe('Alpha Radar | Binance'));
   });
 });
