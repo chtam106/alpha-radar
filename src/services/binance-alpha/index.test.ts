@@ -19,6 +19,7 @@ function token(
     symbol,
     contractAddress: `0x${tokenId}`,
     chainId: 56,
+    liquidity: '1234567.89',
     totalSupply: '1000',
     circulatingSupply: '200',
     price: '2',
@@ -44,7 +45,7 @@ describe('Binance Alpha token service', () => {
           code: '000000',
           data: [
             token('alpha', 'ALPHA'),
-            token('edge', 'EDGE', { circulatingSupply: '350' }),
+            token('edge', 'EDGE', { liquidity: 'invalid', circulatingSupply: '350' }),
             token('high', 'HIGH', { circulatingSupply: '360' }),
             token('spot', 'SPOT'),
             token('no-futures', 'NOFUT'),
@@ -110,6 +111,7 @@ describe('Binance Alpha token service', () => {
     expect(tokens.map(({ futuresSymbol }) => futuresSymbol)).toEqual(['ALPHAUSDT', 'EDGEUSDT']);
     expect(tokens[0]).toMatchObject({
       tokenId: 'alpha',
+      liquidity: 1234567.89,
       cmcSlug: 'alpha-token',
       totalSupply: 2000,
       circulatingSupply: 400,
@@ -119,6 +121,7 @@ describe('Binance Alpha token service', () => {
     });
     expect(tokens[1]).toMatchObject({
       tokenId: 'edge',
+      liquidity: null,
       totalSupply: 1000,
       circulatingSupply: 350,
       unlockedPercent: 35,

@@ -40,7 +40,7 @@ export interface TokenTableRowData {
   id: string;
   futuresSymbol: string;
   symbol: string;
-  name: string;
+  liquidity: number | null;
   iconUrl: string | null;
   price: number | null;
   marketCap: number | null;
@@ -81,7 +81,7 @@ export function TokenTable({ rows, ariaLabel, sort, onOpenMenu }: TokenTableProp
       <Table aria-label={ariaLabel} className="m-token-table__table">
         <colgroup>
           <col className="m-token-table__index-col" />
-          <col span={6} />
+          <col span={7} />
           <col className="m-token-table__target-fdv-col" />
           <col className="m-token-table__target-fdv-col" />
         </colgroup>
@@ -105,10 +105,10 @@ export function TokenTable({ rows, ariaLabel, sort, onOpenMenu }: TokenTableProp
                   direction={sort.field === 'marketCap' ? sort.direction : 'desc'}
                   onClick={() => sort.onChange('marketCap')}
                 >
-                  Market cap
+                  MC
                 </TableSortLabel>
               ) : (
-                'Market cap'
+                'MC'
               )}
             </TableCell>
             <TableCell
@@ -129,7 +129,7 @@ export function TokenTable({ rows, ariaLabel, sort, onOpenMenu }: TokenTableProp
               )}
             </TableCell>
             <TableCell align="center" rowSpan={2}>
-              Total Supply
+              T.Supply
             </TableCell>
             <TableCell
               align="center"
@@ -147,6 +147,9 @@ export function TokenTable({ rows, ariaLabel, sort, onOpenMenu }: TokenTableProp
               ) : (
                 'Unlocked'
               )}
+            </TableCell>
+            <TableCell align="center" rowSpan={2}>
+              Chain.Lq
             </TableCell>
             <TableCell align="center" colSpan={2}>
               @ $27.5B FDV
@@ -194,7 +197,7 @@ export function TokenTable({ rows, ariaLabel, sort, onOpenMenu }: TokenTableProp
                 {index + 1}
               </TableCell>
               <TableCell>
-                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 180 }}>
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                   <Box component="span" className="m-token-table__token-icon">
                     {row.iconUrl ? (
                       <img src={row.iconUrl} alt={row.symbol} referrerPolicy="no-referrer" />
@@ -202,16 +205,7 @@ export function TokenTable({ rows, ariaLabel, sort, onOpenMenu }: TokenTableProp
                       row.symbol.slice(0, 1)
                     )}
                   </Box>
-                  <Box>
-                    <Typography className="m-token-table__token-symbol">{row.symbol}</Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      className="m-token-table__token-name"
-                    >
-                      {row.name}
-                    </Typography>
-                  </Box>
+                  <Typography className="m-token-table__token-symbol">{row.symbol}</Typography>
                 </Stack>
               </TableCell>
               <TableCell align="center">{formatPrice(row.price)}</TableCell>
@@ -224,6 +218,9 @@ export function TokenTable({ rows, ariaLabel, sort, onOpenMenu }: TokenTableProp
                 {row.unlockedPercent === null
                   ? '—'
                   : `${percentFormatter.format(row.unlockedPercent)}%`}
+              </TableCell>
+              <TableCell align="center" className="m-token-table__chain-liquidity">
+                {formatUsd(row.liquidity)}
               </TableCell>
               <TableCell align="center" className="m-token-table__target-fdv-cell">
                 {formatPrice(

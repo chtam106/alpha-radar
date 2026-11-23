@@ -75,7 +75,7 @@ export function WatchlistPage() {
         id: symbol,
         futuresSymbol: symbol,
         symbol: token?.symbol ?? symbol.replace(/(?:USDT|USDC)$/, ''),
-        name: token?.name ?? 'Not currently in the Alpha Radar',
+        liquidity: token?.liquidity ?? null,
         iconUrl: token?.iconUrl ?? null,
         price: token?.price ?? null,
         marketCap: token?.marketCap ?? null,

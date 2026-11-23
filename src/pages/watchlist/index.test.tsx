@@ -17,6 +17,7 @@ const alphaToken: BscAlphaToken = {
   symbol: 'ALPHA',
   futuresSymbol: 'ALPHAUSDT',
   contractAddress: '0xalpha',
+  liquidity: 100_000,
   cmcSlug: 'alpha-token',
   iconUrl: null,
   price: 0.1,
@@ -53,7 +54,8 @@ describe('Watchlist page', () => {
     renderWatchlist();
 
     await screen.findByRole('table', { name: 'Saved futures watchlist' });
-    expect(screen.getByText('Alpha Token')).toBeInTheDocument();
+    expect(screen.getByText('ALPHA')).toBeInTheDocument();
+    expect(screen.queryByText('Alpha Token')).not.toBeInTheDocument();
 
     fireEvent.contextMenu(screen.getByRole('row', { name: 'Open ALPHAUSDT actions menu' }), {
       clientX: 160,
@@ -74,7 +76,7 @@ describe('Watchlist page', () => {
 
     await screen.findByRole('table', { name: 'Saved futures watchlist' });
     expect(screen.getByText('OLD')).toBeInTheDocument();
-    expect(screen.getByText('Not currently in the Alpha Radar')).toBeInTheDocument();
+    expect(screen.queryByText('Not currently in the Alpha Radar')).not.toBeInTheDocument();
   });
 
   it('refreshes current data without removing a saved pair', async () => {
@@ -82,10 +84,10 @@ describe('Watchlist page', () => {
     fetchBscAlphaTokensMock.mockResolvedValueOnce([alphaToken]).mockResolvedValueOnce([]);
     renderWatchlist();
 
-    await screen.findByText('Alpha Token');
+    await screen.findByText('ALPHA');
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
     await waitFor(() => expect(fetchBscAlphaTokensMock).toHaveBeenCalledTimes(2));
-    expect(await screen.findByText('Not currently in the Alpha Radar')).toBeInTheDocument();
+    expect(screen.getByText('ALPHA')).toBeInTheDocument();
     expect(window.localStorage.getItem('crypto-dashboard:watchlist')).toBe('["ALPHAUSDT"]');
   });
 

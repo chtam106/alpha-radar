@@ -5,6 +5,7 @@
   }
 
   &__table {
+    width: max-content;
     min-width: 1080px;
 
     thead th {
@@ -17,7 +18,7 @@
 
     th,
     td {
-      padding: 15px 24px;
+      padding: 15px 0;
       border-bottom-color: rgb(255 255 255 / 6%);
     }
 
@@ -28,7 +29,7 @@
 
     .m-token-table__index-cell {
       padding-right: 0;
-      padding-left: 16px;
+      padding-left: 0;
       color: #84929f;
       font-variant-numeric: tabular-nums;
     }
@@ -41,6 +42,10 @@
   &__supply-data {
     color: #dce5eb;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &__chain-liquidity {
     white-space: nowrap;
   }
 
@@ -76,29 +81,11 @@
     font-weight: 700;
   }
 
-  &__token-name {
-    display: block;
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   &__index-col {
     width: 56px;
   }
 
   &__target-fdv-col {
     width: 140px;
-  }
-
-  @media (width <= 600px) {
-    &__table {
-      th,
-      td {
-        padding-right: 16px;
-        padding-left: 16px;
-      }
-    }
   }
 }
