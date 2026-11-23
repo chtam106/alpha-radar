@@ -36,12 +36,26 @@ export interface BscAlphaTokenMetrics {
   unlockedPercent: number | null;
 }
 
-type SupplyMetrics = Pick<
-  BscAlphaTokenMetrics,
-  'circulatingSupply' | 'totalSupply' | 'unlockedPercent'
->;
-type AlphaTokenCandidate = Omit<BscAlphaToken, 'futuresSymbol' | 'cmcSlug' | keyof SupplyMetrics> &
-  SupplyMetrics;
+interface CurrentTokenMetrics extends BscAlphaTokenMetrics {
+  price: number | null;
+}
+
+interface RawTokenSupply {
+  circulatingSupply: number | null;
+  totalSupply: number | null;
+  unlockedPercent: number | null;
+}
+
+interface AlphaTokenCandidate {
+  tokenId: string;
+  name: string;
+  symbol: string;
+  contractAddress: string;
+  iconUrl: string | null;
+  price: number | null;
+  totalSupply: number | null;
+  unlockedPercent: number | null;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -56,7 +70,7 @@ function parseNumericValue(value: unknown): number | null {
   return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
-function parseSupplyMetrics(value: Record<string, unknown>): SupplyMetrics {
+function parseSupplyMetrics(value: Record<string, unknown>): RawTokenSupply {
   const circulatingSupply = parseNumericValue(value.circulatingSupply);
   const totalSupply = parseNumericValue(value.totalSupply);
   const unlockedPercent =
@@ -71,7 +85,7 @@ function parseSupplyMetrics(value: Record<string, unknown>): SupplyMetrics {
   return { circulatingSupply, totalSupply, unlockedPercent };
 }
 
-function parseCurrentTokenMetrics(value: unknown): BscAlphaTokenMetrics | null {
+function parseCurrentTokenMetrics(value: unknown): CurrentTokenMetrics | null {
   if (
     !isRecord(value) ||
     String(value.chainId) !== BSC_CHAIN_ID ||
@@ -87,8 +101,9 @@ function parseCurrentTokenMetrics(value: unknown): BscAlphaTokenMetrics | null {
     name: typeof value.name === 'string' ? value.name : null,
     contractAddress: typeof value.contractAddress === 'string' ? value.contractAddress : null,
     cmcSlug: null,
-    marketCap: parseNumericValue(value.marketCap),
-    fdv: parseNumericValue(value.fdv),
+    price: parseNumericValue(value.price),
+    marketCap: null,
+    fdv: null,
     ...parseSupplyMetrics(value)
   };
 }
@@ -116,6 +131,8 @@ function parseAlphaTokenCandidate(value: unknown): AlphaTokenCandidate | null {
     return null;
   }
 
+  const { totalSupply, unlockedPercent } = parseSupplyMetrics(value);
+
   return {
     tokenId,
     name,
@@ -123,9 +140,8 @@ function parseAlphaTokenCandidate(value: unknown): AlphaTokenCandidate | null {
     contractAddress,
     iconUrl: typeof value.iconUrl === 'string' ? value.iconUrl : null,
     price: parseNumericValue(value.price),
-    marketCap: parseNumericValue(value.marketCap),
-    fdv: parseNumericValue(value.fdv),
-    ...parseSupplyMetrics(value)
+    totalSupply,
+    unlockedPercent
   };
 }
 
@@ -149,7 +165,7 @@ export async function fetchBscAlphaTokenMetrics(
 
   const matches = payload.data
     .map(parseCurrentTokenMetrics)
-    .filter((token): token is BscAlphaTokenMetrics => token !== null)
+    .filter((token): token is CurrentTokenMetrics => token !== null)
     .filter((token) => token.symbol === baseAsset);
 
   if (matches.length !== 1) {
@@ -157,15 +173,31 @@ export async function fetchBscAlphaTokenMetrics(
   }
 
   const [token] = matches;
-  const cmcSlug =
+  const cmcSupply =
     token.name && token.contractAddress
       ? (findCoinMarketCapSupply?.({
           symbol: token.symbol,
           name: token.name,
           contractAddress: token.contractAddress
-        })?.slug ?? null)
+        }) ?? null)
       : null;
-  return { ...token, cmcSlug };
+
+  const { totalSupply, unlockedPercent } = cmcSupply ?? token;
+  const circulatingSupply =
+    totalSupply !== null && unlockedPercent !== null
+      ? totalSupply * (unlockedPercent / 100)
+      : token.circulatingSupply;
+  const { price, ...metrics } = token;
+
+  return {
+    ...metrics,
+    cmcSlug: cmcSupply?.slug ?? null,
+    circulatingSupply,
+    totalSupply,
+    unlockedPercent,
+    marketCap: price !== null && circulatingSupply !== null ? price * circulatingSupply : null,
+    fdv: price !== null && totalSupply !== null ? price * totalSupply : null
+  };
 }
 
 async function fetchJson(url: string, signal?: AbortSignal): Promise<unknown> {
@@ -265,9 +297,8 @@ export async function fetchBscAlphaTokens(signal?: AbortSignal): Promise<BscAlph
   return candidates
     .flatMap((token): BscAlphaToken[] => {
       const coinMarketCapSupply = findCoinMarketCapSupply(token);
-      const { circulatingSupply, totalSupply, unlockedPercent } = coinMarketCapSupply ?? token;
+      const { totalSupply, unlockedPercent } = coinMarketCapSupply ?? token;
       if (
-        circulatingSupply === null ||
         totalSupply === null ||
         unlockedPercent === null ||
         unlockedPercent > MAX_UNLOCKED_PERCENT
@@ -275,13 +306,23 @@ export async function fetchBscAlphaTokens(signal?: AbortSignal): Promise<BscAlph
         return [];
       }
 
+      const circulatingSupply = totalSupply * (unlockedPercent / 100);
+
       return [
         {
-          ...token,
+          tokenId: token.tokenId,
+          name: token.name,
+          symbol: token.symbol,
+          futuresSymbol: token.futuresSymbol,
+          contractAddress: token.contractAddress,
           cmcSlug: coinMarketCapSupply?.slug ?? null,
+          iconUrl: token.iconUrl,
+          price: token.price,
           circulatingSupply,
           totalSupply,
-          unlockedPercent
+          unlockedPercent,
+          marketCap: token.price !== null ? token.price * circulatingSupply : null,
+          fdv: token.price !== null ? token.price * totalSupply : null
         }
       ];
     })
