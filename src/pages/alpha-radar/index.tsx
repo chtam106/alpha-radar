@@ -286,6 +286,15 @@ export function CryptoDashboard() {
                   Total supply
                 </Typography>
                 <Box className="p-crypto-dashboard__quick-filter-options">
+                  <Chip
+                    label="All"
+                    clickable
+                    aria-pressed={totalSupplyFilters.length === 0}
+                    variant={totalSupplyFilters.length === 0 ? 'filled' : 'outlined'}
+                    color={totalSupplyFilters.length === 0 ? 'primary' : 'default'}
+                    onClick={() => setTotalSupplyFilters([])}
+                    className="p-crypto-dashboard__quick-filter-chip"
+                  />
                   {TOTAL_SUPPLY_FILTERS.map(({ label, value }) => {
                     const selected = totalSupplyFilters.includes(value);
                     return (
