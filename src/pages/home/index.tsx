@@ -27,6 +27,7 @@ import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
 import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
 import { TokenContextMenu } from '@/components/molecules/token-context-menu';
+import { WatchlistFeedback } from '@/components/molecules/watchlist-feedback';
 import {
   TokenTableSortControl,
   TokenTable,
@@ -354,7 +355,7 @@ export function HomePage() {
   const [sortPreference, setSortPreference] = useState(readSortPreference);
   const [filterPreference, setFilterPreference] = useState(readFilterPreference);
   const [filterPending, startFilterTransition] = useTransition();
-  const { isWatchlisted, toggleWatchlist } = useWatchlist();
+  const { isWatchlisted, toggleWatchlist, feedback, clearFeedback } = useWatchlist();
   const [contextMenu, setContextMenu] = useState<TokenContextMenuState | null>(null);
   const { totalSupplyFilters, minUnlockFilter, maxUnlockFilter } = filterPreference;
   const filtersActive =
@@ -695,6 +696,7 @@ export function HomePage() {
             }}
             onContextMenuOverlay={handleContextMenuOnOverlay}
           />
+          <WatchlistFeedback feedback={feedback} onClose={clearFeedback} />
           {((refreshKey > 0 && loading) || filterPending) && (
             <Dialog
               open

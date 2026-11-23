@@ -26,11 +26,31 @@ describe('useWatchlist', () => {
 
     act(() => result.current.toggleWatchlist('btcusdt'));
     expect(result.current.watchlist).toEqual(['BTCUSDT']);
+    expect(result.current.feedback).toBe('added');
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe('["BTCUSDT"]');
 
     act(() => result.current.toggleWatchlist('BtcUsdt'));
     expect(result.current.watchlist).toEqual([]);
+    expect(result.current.feedback).toBe('removed');
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe('[]');
+  });
+
+  it('reports a storage failure without changing the saved watchlist', () => {
+    const { result } = renderHook(() => useWatchlist());
+    const error = new Error('Storage unavailable');
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const storageSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw error;
+    });
+    try {
+      act(() => result.current.toggleWatchlist('BTCUSDT'));
+      expect(result.current.watchlist).toEqual([]);
+      expect(result.current.feedback).toBe('error');
+      expect(errorSpy).toHaveBeenCalledWith('Unable to save the watchlist.', error);
+    } finally {
+      storageSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
   });
 
   it('synchronizes matching storage events and ignores other keys', () => {

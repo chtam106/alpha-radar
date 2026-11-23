@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BscAlphaToken } from '@/services/binance-alpha';
 
@@ -32,14 +32,8 @@ function renderWatchlist() {
   return render(
     <MemoryRouter initialEntries={['/watchlist']}>
       <WatchlistPage />
-      <CurrentPath />
     </MemoryRouter>
   );
-}
-
-function CurrentPath() {
-  const { pathname } = useLocation();
-  return <output>{pathname}</output>;
 }
 
 describe('Watchlist page', () => {
@@ -68,6 +62,7 @@ describe('Watchlist page', () => {
       'https://example.com/alpha.png'
     );
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove from watchlist' }));
+    expect(screen.getByRole('dialog', { name: 'Removed from watchlist' })).toBeVisible();
 
     await waitFor(() => {
       expect(window.localStorage.getItem('crypto-dashboard:watchlist')).toBe('[]');
@@ -100,13 +95,15 @@ describe('Watchlist page', () => {
     expect(window.localStorage.getItem('crypto-dashboard:watchlist')).toBe('["ALPHAUSDT"]');
   });
 
-  it('offers a route back to Home when the watchlist is empty', async () => {
+  it('explains how to add a coin when the watchlist is empty', async () => {
     fetchBscAlphaTokensMock.mockResolvedValue([]);
     renderWatchlist();
 
     expect(await screen.findByText('Your watchlist is empty')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Browse Alpha Radar' }));
-    expect(screen.getByText('/')).toBeInTheDocument();
+    expect(
+      screen.getByText('Tap or click a coin to open its menu, then choose Add to watchlist.')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Refresh' })).not.toBeInTheDocument();
   });
 
   it('shows API errors while retaining the saved watchlist row', async () => {

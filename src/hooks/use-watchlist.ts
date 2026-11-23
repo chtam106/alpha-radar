@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const WATCHLIST_STORAGE_KEY = 'crypto-dashboard:watchlist';
+
+export type WatchlistFeedback = 'added' | 'removed' | 'error' | null;
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((symbol: unknown) => typeof symbol === 'string');
@@ -46,19 +48,23 @@ function readWatchlist(): string[] {
 
 export function useWatchlist() {
   const [watchlist, setWatchlist] = useState(readWatchlist);
+  const watchlistRef = useRef(watchlist);
+  const [feedback, setFeedback] = useState<WatchlistFeedback>(null);
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlist));
+      window.localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlistRef.current));
     } catch (error) {
       console.error('Unable to save the watchlist.', error);
     }
-  }, [watchlist]);
+  }, []);
 
   useEffect(() => {
     function handleStorageChange(event: StorageEvent) {
       if (event.key === WATCHLIST_STORAGE_KEY) {
-        setWatchlist(parseWatchlist(event.newValue));
+        const nextWatchlist = parseWatchlist(event.newValue);
+        watchlistRef.current = nextWatchlist;
+        setWatchlist(nextWatchlist);
       }
     }
 
@@ -73,12 +79,23 @@ export function useWatchlist() {
 
   const toggleWatchlist = useCallback((futuresSymbol: string) => {
     const normalizedSymbol = futuresSymbol.toUpperCase();
-    setWatchlist((current) =>
-      current.includes(normalizedSymbol)
-        ? current.filter((symbol) => symbol !== normalizedSymbol)
-        : [...current, normalizedSymbol]
-    );
-  }, []);
+    const removing = watchlistRef.current.includes(normalizedSymbol);
+    const nextWatchlist = removing
+      ? watchlistRef.current.filter((symbol) => symbol !== normalizedSymbol)
+      : [...watchlistRef.current, normalizedSymbol];
+    try {
+      window.localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(nextWatchlist));
+    } catch (error) {
+      console.error('Unable to save the watchlist.', error);
+      setFeedback('error');
+      return;
+    }
 
-  return { watchlist, isWatchlisted, toggleWatchlist };
+    watchlistRef.current = nextWatchlist;
+    setWatchlist(nextWatchlist);
+    setFeedback(removing ? 'removed' : 'added');
+  }, []);
+  const clearFeedback = useCallback(() => setFeedback(null), []);
+
+  return { watchlist, isWatchlisted, toggleWatchlist, feedback, clearFeedback };
 }

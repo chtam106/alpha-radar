@@ -19,6 +19,7 @@ import {
 import { CandlestickSeries, ColorType, createChart, HistogramSeries } from 'lightweight-charts';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { WatchlistFeedback } from '@/components/molecules/watchlist-feedback';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokenMetrics, type BscAlphaTokenMetrics } from '@/services/binance-alpha';
 import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
@@ -111,7 +112,7 @@ export function CoinChartPage() {
   const { symbol: routeSymbol = '' } = useParams();
   const symbol = routeSymbol.toUpperCase();
   const navigate = useNavigate();
-  const { isWatchlisted, toggleWatchlist } = useWatchlist();
+  const { isWatchlisted, toggleWatchlist, feedback, clearFeedback } = useWatchlist();
   const [interval, setInterval] = useState<BinanceFuturesInterval>('1h');
   const [activeTab, setActiveTab] = useState<'chart' | 'data' | 'links'>('chart');
   const [candles, setCandles] = useState<BinanceFuturesCandle[]>([]);
@@ -948,6 +949,7 @@ export function CoinChartPage() {
               </Box>
             )}
           </Paper>
+          <WatchlistFeedback feedback={feedback} onClose={clearFeedback} />
         </Stack>
       </Box>
     </Container>
