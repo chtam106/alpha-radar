@@ -4,6 +4,7 @@ import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material
 import { useEffect } from 'react';
 import { ScrollToEdgeButton } from '@/components/atoms/scroll-to-edge-button';
 import { GlobalHeader } from '@/components/organisms/global-header';
+import { ENABLE_CHART_PAGE } from '@/config/feature-flags';
 import { HomePage } from '@/pages/home';
 import { appTheme } from '@/theme';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
@@ -23,7 +24,8 @@ const WatchlistPage = lazy(() =>
 
 export function AppRoutes() {
   const { pathname } = useLocation();
-  const chartSymbol = pathname.startsWith('/chart/') ? pathname.slice('/chart/'.length) : null;
+  const chartSymbol =
+    ENABLE_CHART_PAGE && pathname.startsWith('/chart/') ? pathname.slice('/chart/'.length) : null;
 
   useEffect(() => {
     document.title = chartSymbol
@@ -42,15 +44,19 @@ export function AppRoutes() {
         <Route
           path="/chart/:symbol"
           element={
-            <Suspense
-              fallback={
-                <Box className="o-app-shell__route-loading">
-                  <CircularProgress aria-label="Loading chart page" />
-                </Box>
-              }
-            >
-              <CoinChartPage />
-            </Suspense>
+            ENABLE_CHART_PAGE ? (
+              <Suspense
+                fallback={
+                  <Box className="o-app-shell__route-loading">
+                    <CircularProgress aria-label="Loading chart page" />
+                  </Box>
+                }
+              >
+                <CoinChartPage />
+              </Suspense>
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
@@ -70,7 +76,7 @@ export function AppRoutes() {
         <Route path="/alpha-bsc" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {!pathname.startsWith('/chart/') && <ScrollToEdgeButton />}
+      {(!ENABLE_CHART_PAGE || !pathname.startsWith('/chart/')) && <ScrollToEdgeButton />}
     </Box>
   );
 }

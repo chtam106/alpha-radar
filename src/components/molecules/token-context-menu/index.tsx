@@ -5,6 +5,7 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 import { type MouseEvent as ReactMouseEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { ENABLE_CHART_PAGE } from '@/config/feature-flags';
 
 export interface TokenContextMenuItem {
   name: string;
@@ -72,25 +73,27 @@ export function TokenContextMenu({
               {token.isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
             </Typography>
           </MenuItem>
-          <MenuItem
-            component={Link}
-            to={`/chart/${encodeURIComponent(token.futuresSymbol)}`}
-            target={
-              openChartInNewTab && window.matchMedia('(min-width: 768px)').matches
-                ? '_blank'
-                : undefined
-            }
-            rel="noopener noreferrer"
-            className="m-token-context-menu__item"
-            onClick={onClose}
-          >
-            <Box component="span" className="m-token-context-menu__icon-wrap">
-              <ShowChartRoundedIcon className="m-token-context-menu__icon" />
-            </Box>
-            <Typography component="span" className="m-token-context-menu__action">
-              Open chart
-            </Typography>
-          </MenuItem>
+          {ENABLE_CHART_PAGE && (
+            <MenuItem
+              component={Link}
+              to={`/chart/${encodeURIComponent(token.futuresSymbol)}`}
+              target={
+                openChartInNewTab && window.matchMedia('(min-width: 768px)').matches
+                  ? '_blank'
+                  : undefined
+              }
+              rel="noopener noreferrer"
+              className="m-token-context-menu__item"
+              onClick={onClose}
+            >
+              <Box component="span" className="m-token-context-menu__icon-wrap">
+                <ShowChartRoundedIcon className="m-token-context-menu__icon" />
+              </Box>
+              <Typography component="span" className="m-token-context-menu__action">
+                Open chart
+              </Typography>
+            </MenuItem>
+          )}
           <Box className="m-token-context-menu__section">Trading &amp; Research</Box>
           <MenuItem
             component="a"
