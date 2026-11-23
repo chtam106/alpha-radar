@@ -7,10 +7,18 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Slider,
   Stack,
   Typography
 } from '@mui/material';
-import { type MouseEvent as ReactMouseEvent, useEffect, useMemo, useState } from 'react';
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  startTransition,
+  useEffect,
+  useMemo,
+  useState
+} from 'react';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
 import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
@@ -152,6 +160,179 @@ function readSortPreference(): SortPreference {
   return DEFAULT_SORT_PREFERENCE;
 }
 
+function TotalSupplyFilter({
+  value,
+  onChange
+}: {
+  value: TotalSupplyFilter[];
+  onChange: (value: TotalSupplyFilter[]) => void;
+}) {
+  const [draft, setDraft] = useState<TotalSupplyFilter[] | null>(null);
+  const [previousValue, setPreviousValue] = useState(value);
+  if (previousValue !== value) {
+    setPreviousValue(value);
+    setDraft(null);
+  }
+  const selectedFilters = draft ?? value;
+
+  function select(next: TotalSupplyFilter[]) {
+    setDraft(next);
+    startTransition(() => onChange(next));
+  }
+
+  return (
+    <Box
+      role="group"
+      aria-label="Filter by total supply"
+      className="p-crypto-dashboard__quick-filter"
+    >
+      <Typography className="p-crypto-dashboard__quick-filter-label">Total supply</Typography>
+      <Box className="p-crypto-dashboard__quick-filter-options">
+        <Chip
+          label="All"
+          clickable
+          aria-pressed={selectedFilters.length === 0}
+          variant={selectedFilters.length === 0 ? 'filled' : 'outlined'}
+          color={selectedFilters.length === 0 ? 'primary' : 'default'}
+          onClick={() => select([])}
+          className="p-crypto-dashboard__quick-filter-chip"
+        />
+        {TOTAL_SUPPLY_FILTERS.map(({ label, value: supply }) => {
+          const selected = selectedFilters.includes(supply);
+          return (
+            <Chip
+              key={supply}
+              label={label}
+              clickable
+              aria-pressed={selected}
+              variant={selected ? 'filled' : 'outlined'}
+              color={selected ? 'primary' : 'default'}
+              onClick={() =>
+                select(
+                  selected
+                    ? selectedFilters.filter((item) => item !== supply)
+                    : [...selectedFilters, supply]
+                )
+              }
+              className="p-crypto-dashboard__quick-filter-chip"
+            />
+          );
+        })}
+      </Box>
+    </Box>
+  );
+}
+
+function UnlockRangeSlider({
+  minimum,
+  maximum,
+  onChange
+}: {
+  minimum: MinUnlockFilter;
+  maximum: UnlockFilter;
+  onChange: (minimum: MinUnlockFilter, maximum: UnlockFilter) => void;
+}) {
+  const [draft, setDraft] = useState<number[] | null>(null);
+  const [previousRange, setPreviousRange] = useState([minimum, maximum]);
+  if (previousRange[0] !== minimum || previousRange[1] !== maximum) {
+    setPreviousRange([minimum, maximum]);
+    setDraft(null);
+  }
+  const range = draft ?? [minimum, maximum];
+
+  function commitRange(value: number[]) {
+    const min = Math.min(30, Math.max(0, Math.round(value[0] / 5) * 5));
+    const max = Math.min(35, Math.max(5, Math.round(value[1] / 5) * 5));
+    if (isMinUnlockFilter(min) && isUnlockFilter(max)) {
+      setDraft(min === minimum && max === maximum ? null : [min, max]);
+      onChange(min, max);
+    }
+  }
+
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (!(event.target instanceof HTMLInputElement)) return;
+    const index = Number(event.target.dataset.index);
+    if (index !== 0 && index !== 1) return;
+
+    let value: number;
+    switch (event.key) {
+      case 'ArrowUp':
+      case 'ArrowRight':
+      case 'PageUp':
+        value = range[index] + 5;
+        break;
+      case 'ArrowDown':
+      case 'ArrowLeft':
+      case 'PageDown':
+        value = range[index] - 5;
+        break;
+      case 'Home':
+        value = index === 0 ? 0 : 5;
+        break;
+      case 'End':
+        value = index === 0 ? 30 : 35;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    const next = [...range];
+    next[index] =
+      index === 0
+        ? Math.max(0, Math.min(value, 30, range[1]))
+        : Math.min(35, Math.max(value, 5, range[0]));
+    commitRange(next);
+  }
+
+  return (
+    <Box className="p-crypto-dashboard__unlock-slider" onKeyDownCapture={handleKeyDown}>
+      <Slider
+        className="p-crypto-dashboard__unlock-control"
+        value={range}
+        min={0}
+        max={35}
+        step={0.1}
+        marks={[...MIN_UNLOCK_FILTERS, DEFAULT_UNLOCK_FILTER].map((value) => ({
+          value,
+          label: (
+            <span
+              className={`p-crypto-dashboard__unlock-mark-value${
+                range.some((endpoint) => Math.round(endpoint / 5) * 5 === value)
+                  ? ' p-crypto-dashboard__unlock-mark-value--selected'
+                  : ''
+              }`}
+            >
+              {value}%
+            </span>
+          )
+        }))}
+        slotProps={{
+          mark: { className: 'p-crypto-dashboard__unlock-tick' },
+          markLabel: { className: 'p-crypto-dashboard__unlock-mark' },
+          thumb: { className: 'p-crypto-dashboard__unlock-thumb' },
+          track: { className: 'p-crypto-dashboard__unlock-track' }
+        }}
+        disableSwap
+        getAriaLabel={(index) => (index === 0 ? 'Minimum unlock' : 'Maximum unlock')}
+        getAriaValueText={(value) => `${value}%`}
+        onChange={(_, value, activeThumb) => {
+          if (Array.isArray(value)) {
+            const next = [...value];
+            if (activeThumb === 0) next[0] = Math.min(next[0], 30);
+            if (activeThumb === 1) next[1] = Math.max(next[1], 5);
+            setDraft(next);
+          }
+        }}
+        onChangeCommitted={(_, value) => {
+          if (Array.isArray(value)) commitRange(value);
+        }}
+      />
+    </Box>
+  );
+}
+
 export function HomePage() {
   const [tokens, setTokens] = useState<BscAlphaToken[]>([]);
   const [loading, setLoading] = useState(true);
@@ -257,39 +438,6 @@ export function HomePage() {
     [sortedTokens]
   );
 
-  function toggleTotalSupplyFilter(supply: TotalSupplyFilter) {
-    setFilterPreference((current) => ({
-      ...current,
-      totalSupplyFilters: current.totalSupplyFilters.includes(supply)
-        ? current.totalSupplyFilters.filter((value) => value !== supply)
-        : [...current.totalSupplyFilters, supply]
-    }));
-  }
-
-  function handleMinUnlockChange(value: MinUnlockFilter) {
-    setFilterPreference((current) =>
-      value > current.maxUnlockFilter
-        ? {
-            ...current,
-            minUnlockFilter: value,
-            maxUnlockFilter: DEFAULT_UNLOCK_FILTER
-          }
-        : { ...current, minUnlockFilter: value }
-    );
-  }
-
-  function handleMaxUnlockChange(value: UnlockFilter) {
-    setFilterPreference((current) =>
-      value < current.minUnlockFilter
-        ? {
-            ...current,
-            minUnlockFilter: DEFAULT_MIN_UNLOCK_FILTER,
-            maxUnlockFilter: value
-          }
-        : { ...current, maxUnlockFilter: value }
-    );
-  }
-
   function resetFilters() {
     setFilterPreference({ ...DEFAULT_FILTER_PREFERENCE });
   }
@@ -370,93 +518,32 @@ export function HomePage() {
 
           <Box className="p-crypto-dashboard__list-heading">
             <Box className="p-crypto-dashboard__filters">
+              <TotalSupplyFilter
+                value={totalSupplyFilters}
+                onChange={(value) =>
+                  setFilterPreference((current) => ({ ...current, totalSupplyFilters: value }))
+                }
+              />
               <Box
                 role="group"
-                aria-label="Filter by total supply"
-                className="p-crypto-dashboard__quick-filter"
+                aria-label="Filter by unlock range"
+                className="p-crypto-dashboard__quick-filter p-crypto-dashboard__unlock-filter"
               >
-                <Typography className="p-crypto-dashboard__quick-filter-label">
-                  Total supply
-                </Typography>
-                <Box className="p-crypto-dashboard__quick-filter-options">
-                  <Chip
-                    label="All"
-                    clickable
-                    aria-pressed={totalSupplyFilters.length === 0}
-                    variant={totalSupplyFilters.length === 0 ? 'filled' : 'outlined'}
-                    color={totalSupplyFilters.length === 0 ? 'primary' : 'default'}
-                    onClick={() =>
-                      setFilterPreference((current) => ({ ...current, totalSupplyFilters: [] }))
-                    }
-                    className="p-crypto-dashboard__quick-filter-chip"
+                <Typography className="p-crypto-dashboard__quick-filter-label">Unlock</Typography>
+                <Box className="p-crypto-dashboard__unlock-range">
+                  <UnlockRangeSlider
+                    minimum={minUnlockFilter}
+                    maximum={maxUnlockFilter}
+                    onChange={(minimum, maximum) => {
+                      startTransition(() => {
+                        setFilterPreference((current) => ({
+                          ...current,
+                          minUnlockFilter: minimum,
+                          maxUnlockFilter: maximum
+                        }));
+                      });
+                    }}
                   />
-                  {TOTAL_SUPPLY_FILTERS.map(({ label, value }) => {
-                    const selected = totalSupplyFilters.includes(value);
-                    return (
-                      <Chip
-                        key={value}
-                        label={label}
-                        clickable
-                        aria-pressed={selected}
-                        variant={selected ? 'filled' : 'outlined'}
-                        color={selected ? 'primary' : 'default'}
-                        onClick={() => toggleTotalSupplyFilter(value)}
-                        className="p-crypto-dashboard__quick-filter-chip"
-                      />
-                    );
-                  })}
-                </Box>
-              </Box>
-              <Box
-                role="group"
-                aria-label="Filter by minimum unlock"
-                className="p-crypto-dashboard__quick-filter"
-              >
-                <Typography className="p-crypto-dashboard__quick-filter-label">
-                  Min unlock
-                </Typography>
-                <Box className="p-crypto-dashboard__quick-filter-options">
-                  {MIN_UNLOCK_FILTERS.map((value) => {
-                    const selected = minUnlockFilter === value;
-                    return (
-                      <Chip
-                        key={value}
-                        label={`${value}%`}
-                        clickable
-                        aria-pressed={selected}
-                        variant={selected ? 'filled' : 'outlined'}
-                        color={selected ? 'primary' : 'default'}
-                        onClick={() => handleMinUnlockChange(value)}
-                        className="p-crypto-dashboard__quick-filter-chip"
-                      />
-                    );
-                  })}
-                </Box>
-              </Box>
-              <Box
-                role="group"
-                aria-label="Filter by maximum unlock"
-                className="p-crypto-dashboard__quick-filter"
-              >
-                <Typography className="p-crypto-dashboard__quick-filter-label">
-                  Max unlock
-                </Typography>
-                <Box className="p-crypto-dashboard__quick-filter-options">
-                  {UNLOCK_FILTERS.map((value) => {
-                    const selected = maxUnlockFilter === value;
-                    return (
-                      <Chip
-                        key={value}
-                        label={`${value}%`}
-                        clickable
-                        aria-pressed={selected}
-                        variant={selected ? 'filled' : 'outlined'}
-                        color={selected ? 'primary' : 'default'}
-                        onClick={() => handleMaxUnlockChange(value)}
-                        className="p-crypto-dashboard__quick-filter-chip"
-                      />
-                    );
-                  })}
                 </Box>
               </Box>
             </Box>
