@@ -13,6 +13,7 @@ export const appTheme = createTheme({
     fontSize: 16,
     h1: { fontWeight: 650, letterSpacing: '-0.045em' },
     h2: { fontWeight: 600, letterSpacing: '-0.025em' },
+    body1: { '@media (max-width:600px)': { fontSize: '1rem' } },
     body2: { fontSize: '1rem' },
     button: { fontSize: '1rem' },
     caption: { fontSize: '1rem' },

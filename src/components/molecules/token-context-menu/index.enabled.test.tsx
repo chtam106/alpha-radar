@@ -17,7 +17,8 @@ describe('TokenContextMenu with the chart flag enabled', () => {
       <MemoryRouter initialEntries={['/']}>
         <TokenContextMenu
           token={{
-            name: 'Alpha Token',
+            symbol: 'ALPHA',
+            iconUrl: null,
             futuresSymbol: 'ALPHA/USDT',
             coinMarketCapUrl: 'https://coinmarketcap.com/currencies/alpha-token/',
             isWatchlisted: false

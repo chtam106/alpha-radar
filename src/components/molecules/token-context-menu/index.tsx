@@ -8,7 +8,8 @@ import { Link } from 'react-router-dom';
 import { ENABLE_CHART_PAGE } from '@/config/feature-flags';
 
 export interface TokenContextMenuItem {
-  name: string;
+  symbol: string;
+  iconUrl: string | null;
   futuresSymbol: string;
   coinMarketCapUrl: string;
   isWatchlisted: boolean;
@@ -53,7 +54,16 @@ export function TokenContextMenu({
         <>
           <Box className="m-token-context-menu__heading">
             <Typography className="m-token-context-menu__label">Token</Typography>
-            <Typography className="m-token-context-menu__symbol">{token.name}</Typography>
+            <Box className="m-token-context-menu__identity">
+              <Box component="span" className="m-token-context-menu__token-icon" aria-hidden="true">
+                {token.iconUrl ? (
+                  <img src={token.iconUrl} alt="" referrerPolicy="no-referrer" />
+                ) : (
+                  token.symbol.slice(0, 1)
+                )}
+              </Box>
+              <Typography className="m-token-context-menu__symbol">{token.symbol}</Typography>
+            </Box>
           </Box>
           <MenuItem
             className="m-token-context-menu__item"

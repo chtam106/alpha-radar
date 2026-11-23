@@ -16,6 +16,7 @@ import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alph
 import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
 import { TokenContextMenu } from '@/components/molecules/token-context-menu';
 import {
+  TokenTableSortControl,
   TokenTable,
   type TokenTableRowData,
   type TokenTableSortDirection,
@@ -534,12 +535,17 @@ export function HomePage() {
                 <Typography color="text.secondary">Loading Binance Alpha tokens…</Typography>
               </Box>
             ) : sortedTokens.length > 0 ? (
-              <TokenTable
-                ariaLabel="Binance Alpha BSC tokens listed in futures but not spot, with unlock of 35 percent or less"
-                rows={tableRows}
-                sort={{ field: sortField, direction: sortDirection, onChange: handleSort }}
-                onOpenMenu={openTokenMenu}
-              />
+              <>
+                <TokenTableSortControl
+                  sort={{ field: sortField, direction: sortDirection, onChange: handleSort }}
+                />
+                <TokenTable
+                  ariaLabel="Binance Alpha BSC tokens listed in futures but not spot, with unlock of 35 percent or less"
+                  rows={tableRows}
+                  sort={{ field: sortField, direction: sortDirection, onChange: handleSort }}
+                  onOpenMenu={openTokenMenu}
+                />
+              </>
             ) : tokens.length > 0 ? (
               <Box className="p-crypto-dashboard__state">
                 <Typography variant="subtitle1">No matching tokens found</Typography>
@@ -560,7 +566,8 @@ export function HomePage() {
             token={
               contextMenu
                 ? {
-                    name: contextMenu.token.name,
+                    symbol: contextMenu.token.symbol,
+                    iconUrl: contextMenu.token.iconUrl,
                     futuresSymbol: contextMenu.token.futuresSymbol,
                     coinMarketCapUrl: getCoinMarketCapUrl(contextMenu.token),
                     isWatchlisted: isWatchlisted(contextMenu.token.futuresSymbol)

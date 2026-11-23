@@ -18,7 +18,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     token: {
-      name: 'Bitcoin',
+      symbol: 'BTC',
+      iconUrl: null,
       futuresSymbol: 'BTCUSDT',
       coinMarketCapUrl: 'https://coinmarketcap.com/currencies/bitcoin/',
       isWatchlisted: true
