@@ -37,7 +37,13 @@ function parseEntry(value: unknown): CoinMarketCapSupplyEntry | null {
     typeof value.symbol !== 'string' ||
     typeof value.name !== 'string' ||
     typeof value.circulatingSupply !== 'number' ||
-    typeof value.totalSupply !== 'number'
+    !Number.isFinite(value.circulatingSupply) ||
+    typeof value.totalSupply !== 'number' ||
+    !Number.isFinite(value.totalSupply) ||
+    (typeof value.unlockedPercent === 'number' &&
+      (!Number.isFinite(value.unlockedPercent) ||
+        value.unlockedPercent < 0 ||
+        value.unlockedPercent > 100))
   ) {
     return null;
   }
@@ -56,6 +62,8 @@ function parseEntry(value: unknown): CoinMarketCapSupplyEntry | null {
 function toSupply(entry: CoinMarketCapSupplyEntry | undefined): CoinMarketCapSupply | null {
   if (
     !entry ||
+    !Number.isFinite(entry.circulatingSupply) ||
+    !Number.isFinite(entry.totalSupply) ||
     entry.circulatingSupply < 0 ||
     entry.totalSupply <= 0 ||
     entry.circulatingSupply > entry.totalSupply

@@ -40,5 +40,26 @@ pnpm check
 pnpm build
 ```
 
-GitHub Actions runs independent TypeScript, ESLint, Stylelint, and Prettier checks for pull
-requests targeting `master`, only when relevant files change.
+## Tests
+
+```powershell
+pnpm test
+pnpm run test:coverage
+```
+
+`pnpm test` runs the full suite without contacting live APIs; API and Worker dependencies are
+mocked. Use a file path to run one suite, for example:
+
+```powershell
+pnpm test -- src/services/binance-alpha/index.test.ts
+```
+
+`pnpm run test:coverage` prints a summary and writes the HTML report to `coverage/index.html`.
+Open it in a browser to inspect coverage by file and line. The LCOV report is written to
+`coverage/lcov.info`. CI requires at least 80% statement, line, and function coverage and 70%
+branch coverage. Coverage thresholds are enforced by `pnpm check` and the GitHub Actions `Tests`
+job. Tests cover service parsing and API failures, the CMC proxy Worker, watchlist persistence,
+routing, and interactive Home, Watchlist, and Chart flows.
+
+GitHub Actions also runs TypeScript, ESLint, Stylelint, and Prettier checks for pull requests
+targeting `master`.
