@@ -21,21 +21,21 @@
       border-bottom-color: rgb(255 255 255 / 6%);
     }
 
+    .m-token-table__target-fdv-cell {
+      padding-right: 0;
+      padding-left: 0;
+    }
+
+    .m-token-table__index-cell {
+      padding-right: 0;
+      padding-left: 16px;
+      color: #84929f;
+      font-variant-numeric: tabular-nums;
+    }
+
     tbody tr:last-child td {
       border-bottom: 0;
     }
-  }
-
-  &__target-fdv-cell {
-    padding-right: 0;
-    padding-left: 0;
-  }
-
-  &__index-cell {
-    padding-right: 0;
-    padding-left: 16px;
-    color: #84929f;
-    font-variant-numeric: tabular-nums;
   }
 
   &__supply-data {
