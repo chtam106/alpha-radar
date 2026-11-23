@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { ScrollToEdgeButton } from '@/components/atoms/scroll-to-edge-button';
 import { GlobalHeader } from '@/components/organisms/global-header';
 import { HomePage } from '@/pages/home';
-import { CryptoDashboard } from '@/pages/alpha-radar';
 import { appTheme } from '@/theme';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
@@ -29,11 +28,9 @@ function AppRoutes() {
   useEffect(() => {
     document.title = chartSymbol
       ? `${chartSymbol.toUpperCase()} | Binance Futures`
-      : pathname === '/'
-        ? 'Crypto Desk | Binance'
-        : pathname === '/watchlist'
-          ? 'Watchlist | Binance'
-          : 'High-Risk Alpha Radar | Binance';
+      : pathname === '/watchlist'
+        ? 'Watchlist | Alpha Radar'
+        : 'Alpha Radar | Binance';
   }, [chartSymbol, pathname]);
 
   return (
@@ -41,7 +38,7 @@ function AppRoutes() {
       <GlobalHeader />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/alpha-radar" element={<CryptoDashboard />} />
+        <Route path="/alpha-radar" element={<Navigate to="/" replace />} />
         <Route
           path="/chart/:symbol"
           element={
@@ -70,8 +67,8 @@ function AppRoutes() {
             </Suspense>
           }
         />
-        <Route path="/alpha-bsc" element={<Navigate to="/alpha-radar" replace />} />
-        <Route path="*" element={<Navigate to="/alpha-radar" replace />} />
+        <Route path="/alpha-bsc" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {!pathname.startsWith('/chart/') && <ScrollToEdgeButton />}
     </Box>
