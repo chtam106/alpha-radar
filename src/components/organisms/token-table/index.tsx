@@ -203,7 +203,7 @@ export function TokenTable({ rows, ariaLabel, sort, onOpenMenu }: TokenTableProp
                 Chain.Lq
               </TableCell>
               <TableCell align="center" colSpan={2}>
-                @ $27.5B FDV
+                If FDV reaches $27.5B
               </TableCell>
             </TableRow>
             <TableRow>
@@ -388,7 +388,7 @@ export function TokenTable({ rows, ariaLabel, sort, onOpenMenu }: TokenTableProp
               </Box>
               <Box className="m-token-table__target">
                 <Typography component="span" className="m-token-table__card-label">
-                  @ $27.5B FDV
+                  If FDV reaches $27.5B
                 </Typography>
                 <Box component="dl" className="m-token-table__detail-list">
                   <Box className="m-token-table__detail">
