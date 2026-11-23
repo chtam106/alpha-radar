@@ -19,12 +19,18 @@ describe('ScrollToEdgeButton', () => {
   it('scrolls to the opposite edge and switches direction at the bottom', () => {
     render(<ScrollToEdgeButton />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Scroll to bottom' }));
+    const scrollDownButton = screen.getByRole('button', { name: 'Scroll to bottom' });
+    expect(scrollDownButton.querySelector('svg')).toHaveClass(
+      'a-scroll-to-edge-button__icon--down'
+    );
+    fireEvent.click(scrollDownButton);
     expect(scrollToMock).toHaveBeenCalledWith({ top: 500, behavior: 'smooth' });
 
     Object.defineProperty(window, 'scrollY', { configurable: true, value: 500 });
     fireEvent.scroll(window);
-    fireEvent.click(screen.getByRole('button', { name: 'Scroll to top' }));
+    const scrollUpButton = screen.getByRole('button', { name: 'Scroll to top' });
+    expect(scrollUpButton.querySelector('svg')).toHaveClass('a-scroll-to-edge-button__icon--up');
+    fireEvent.click(scrollUpButton);
     expect(scrollToMock).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
   });
 });

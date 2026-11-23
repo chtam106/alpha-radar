@@ -12,4 +12,38 @@
   &__fab {
     box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
   }
+
+  @media (prefers-reduced-motion: no-preference) {
+    &__icon--up {
+      animation: a-scroll-to-edge-button-bounce-up 1.6s ease-in-out infinite;
+    }
+
+    &__icon--down {
+      animation: a-scroll-to-edge-button-bounce-down 1.6s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes a-scroll-to-edge-button-bounce-up {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes a-scroll-to-edge-button-bounce-down {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(4px);
+  }
 }
