@@ -200,9 +200,9 @@ export function CryptoDashboard() {
 
   function handleContextMenuOnOverlay(event: ReactMouseEvent<HTMLDivElement>) {
     event.preventDefault();
-    const paper = document.querySelector<HTMLElement>('.o-crypto-dashboard__context-menu');
+    const paper = document.querySelector<HTMLElement>('.p-crypto-dashboard__context-menu');
     const backdrop = document.querySelector<HTMLElement>(
-      '.o-crypto-dashboard__context-menu-backdrop'
+      '.p-crypto-dashboard__context-menu-backdrop'
     );
     const paperPointerEvents = paper?.style.pointerEvents;
     const backdropPointerEvents = backdrop?.style.pointerEvents;
@@ -247,18 +247,18 @@ export function CryptoDashboard() {
   }
 
   return (
-    <Container maxWidth="lg" className="o-crypto-dashboard">
-      <Box component="main" className="o-crypto-dashboard__main">
+    <Container maxWidth="lg" className="p-crypto-dashboard">
+      <Box component="main" className="p-crypto-dashboard__main">
         <Stack spacing={3}>
-          <Box className="o-crypto-dashboard__intro">
-            <Box className="o-crypto-dashboard__intro-copy">
+          <Box className="p-crypto-dashboard__intro">
+            <Box className="p-crypto-dashboard__intro-copy">
               <Typography variant="h1" sx={{ mt: 0.5, fontSize: { xs: 34, sm: 46 } }}>
                 High-Risk Alpha Radar
               </Typography>
               <Typography
                 color="text.secondary"
                 sx={{ mt: 1 }}
-                className="o-crypto-dashboard__description"
+                className="p-crypto-dashboard__description"
               >
                 Binance Alpha on BSC · Futures only, no Spot, ≤35% circulating supply. Speculative
                 research; scams and rug pulls are possible.
@@ -269,23 +269,23 @@ export function CryptoDashboard() {
               startIcon={<RefreshRoundedIcon />}
               onClick={() => setRefreshKey((key) => key + 1)}
               disabled={loading}
-              className="o-crypto-dashboard__refresh"
+              className="p-crypto-dashboard__refresh"
             >
               Refresh
             </Button>
           </Box>
 
-          <Box className="o-crypto-dashboard__list-heading">
-            <Box className="o-crypto-dashboard__filters">
+          <Box className="p-crypto-dashboard__list-heading">
+            <Box className="p-crypto-dashboard__filters">
               <Box
                 role="group"
                 aria-label="Filter by total supply"
-                className="o-crypto-dashboard__quick-filter"
+                className="p-crypto-dashboard__quick-filter"
               >
-                <Typography className="o-crypto-dashboard__quick-filter-label">
+                <Typography className="p-crypto-dashboard__quick-filter-label">
                   Total supply
                 </Typography>
-                <Box className="o-crypto-dashboard__quick-filter-options">
+                <Box className="p-crypto-dashboard__quick-filter-options">
                   {TOTAL_SUPPLY_FILTERS.map(({ label, value }) => {
                     const selected = totalSupplyFilters.includes(value);
                     return (
@@ -297,7 +297,7 @@ export function CryptoDashboard() {
                         variant={selected ? 'filled' : 'outlined'}
                         color={selected ? 'primary' : 'default'}
                         onClick={() => toggleTotalSupplyFilter(value)}
-                        className="o-crypto-dashboard__quick-filter-chip"
+                        className="p-crypto-dashboard__quick-filter-chip"
                       />
                     );
                   })}
@@ -306,12 +306,12 @@ export function CryptoDashboard() {
               <Box
                 role="group"
                 aria-label="Filter by maximum unlock"
-                className="o-crypto-dashboard__quick-filter"
+                className="p-crypto-dashboard__quick-filter"
               >
-                <Typography className="o-crypto-dashboard__quick-filter-label">
+                <Typography className="p-crypto-dashboard__quick-filter-label">
                   Max unlock
                 </Typography>
-                <Box className="o-crypto-dashboard__quick-filter-options">
+                <Box className="p-crypto-dashboard__quick-filter-options">
                   {UNLOCK_FILTERS.map((value) => {
                     const selected = unlockFilter === value;
                     return (
@@ -323,7 +323,7 @@ export function CryptoDashboard() {
                         variant={selected ? 'filled' : 'outlined'}
                         color={selected ? 'primary' : 'default'}
                         onClick={() => setUnlockFilter(value)}
-                        className="o-crypto-dashboard__quick-filter-chip"
+                        className="p-crypto-dashboard__quick-filter-chip"
                       />
                     );
                   })}
@@ -332,7 +332,7 @@ export function CryptoDashboard() {
             </Box>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
               {tokens.length > 0 && (
-                <Typography variant="body2" className="o-crypto-dashboard__list-meta">
+                <Typography variant="body2" className="p-crypto-dashboard__list-meta">
                   {filtersActive
                     ? `${sortedTokens.length} of ${tokens.length} coins match`
                     : `${tokens.length} coins match`}
@@ -342,7 +342,7 @@ export function CryptoDashboard() {
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  className="o-crypto-dashboard__list-meta"
+                  className="p-crypto-dashboard__list-meta"
                 >
                   Updated{' '}
                   {lastUpdated.toLocaleTimeString('en-US', {
@@ -362,39 +362,39 @@ export function CryptoDashboard() {
             </Stack>
           </Box>
 
-          <Box className="o-crypto-dashboard__list-panel">
+          <Box className="p-crypto-dashboard__list-panel">
             {error && (
               <Alert
                 severity={tokens.length > 0 ? 'warning' : 'error'}
-                className="o-crypto-dashboard__alert"
+                className="p-crypto-dashboard__alert"
               >
                 {error}
               </Alert>
             )}
 
             {loading && tokens.length === 0 ? (
-              <Box className="o-crypto-dashboard__state">
+              <Box className="p-crypto-dashboard__state">
                 <CircularProgress size={28} />
                 <Typography color="text.secondary">Loading Binance Alpha tokens…</Typography>
               </Box>
             ) : sortedTokens.length > 0 ? (
-              <TableContainer className="o-crypto-dashboard__table-wrap">
+              <TableContainer className="p-crypto-dashboard__table-wrap">
                 <Table
                   aria-label="Binance Alpha BSC tokens listed in futures but not spot, with unlock of 35 percent or less"
-                  className="o-crypto-dashboard__table"
+                  className="p-crypto-dashboard__table"
                 >
                   <colgroup>
-                    <col className="o-crypto-dashboard__index-col" />
+                    <col className="p-crypto-dashboard__index-col" />
                     <col span={6} />
-                    <col className="o-crypto-dashboard__target-fdv-col" />
-                    <col className="o-crypto-dashboard__target-fdv-col" />
+                    <col className="p-crypto-dashboard__target-fdv-col" />
+                    <col className="p-crypto-dashboard__target-fdv-col" />
                   </colgroup>
                   <TableHead>
                     <TableRow>
                       <TableCell
                         align="center"
                         rowSpan={2}
-                        className="o-crypto-dashboard__index-cell"
+                        className="p-crypto-dashboard__index-cell"
                       >
                         #
                       </TableCell>
@@ -449,10 +449,10 @@ export function CryptoDashboard() {
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                      <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
                         Price
                       </TableCell>
-                      <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                      <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
                         MC
                       </TableCell>
                     </TableRow>
@@ -466,7 +466,7 @@ export function CryptoDashboard() {
                         tabIndex={0}
                         aria-haspopup="menu"
                         aria-label={`Open ${token.futuresSymbol} chart; press Enter or Space, or use the context menu for watchlist options`}
-                        className="o-crypto-dashboard__token-row"
+                        className="p-crypto-dashboard__token-row"
                         data-futures-symbol={token.futuresSymbol}
                         onClick={() => openTokenChart(token.futuresSymbol)}
                         onContextMenu={(event) => {
@@ -498,7 +498,7 @@ export function CryptoDashboard() {
                           }
                         }}
                       >
-                        <TableCell align="center" className="o-crypto-dashboard__index-cell">
+                        <TableCell align="center" className="p-crypto-dashboard__index-cell">
                           {index + 1}
                         </TableCell>
                         <TableCell>
@@ -507,7 +507,7 @@ export function CryptoDashboard() {
                             spacing={1.5}
                             sx={{ alignItems: 'center', minWidth: 180 }}
                           >
-                            <Box component="span" className="o-crypto-dashboard__token-icon">
+                            <Box component="span" className="p-crypto-dashboard__token-icon">
                               {token.iconUrl ? (
                                 <img
                                   src={token.iconUrl}
@@ -519,13 +519,13 @@ export function CryptoDashboard() {
                               )}
                             </Box>
                             <Box>
-                              <Typography className="o-crypto-dashboard__token-symbol">
+                              <Typography className="p-crypto-dashboard__token-symbol">
                                 {token.symbol}
                               </Typography>
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
-                                className="o-crypto-dashboard__token-name"
+                                className="p-crypto-dashboard__token-name"
                               >
                                 {token.name}
                               </Typography>
@@ -535,18 +535,18 @@ export function CryptoDashboard() {
                         <TableCell align="center">{formatPrice(token.price)}</TableCell>
                         <TableCell align="center">{formatUsd(token.marketCap)}</TableCell>
                         <TableCell align="center">{formatUsd(token.fdv)}</TableCell>
-                        <TableCell align="center" className="o-crypto-dashboard__supply-data">
+                        <TableCell align="center" className="p-crypto-dashboard__supply-data">
                           {formatSupply(token.totalSupply)}
                         </TableCell>
                         <TableCell align="center">
                           {percentFormatter.format(token.unlockedPercent)}%
                         </TableCell>
-                        <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                        <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
                           {formatPrice(
                             token.totalSupply > 0 ? TARGET_FDV / token.totalSupply : null
                           )}
                         </TableCell>
-                        <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                        <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
                           {formatUsd(
                             token.totalSupply > 0
                               ? (TARGET_FDV * token.circulatingSupply) / token.totalSupply
@@ -559,14 +559,14 @@ export function CryptoDashboard() {
                 </Table>
               </TableContainer>
             ) : tokens.length > 0 ? (
-              <Box className="o-crypto-dashboard__state">
+              <Box className="p-crypto-dashboard__state">
                 <Typography variant="subtitle1">No matching tokens found</Typography>
                 <Typography color="text.secondary">
                   No tokens match the selected filters.
                 </Typography>
               </Box>
             ) : error ? null : (
-              <Box className="o-crypto-dashboard__state">
+              <Box className="p-crypto-dashboard__state">
                 <Typography variant="subtitle1">No matching tokens found</Typography>
                 <Typography color="text.secondary">
                   No active BSC Alpha tokens currently meet the 35% unlock threshold.
@@ -580,14 +580,14 @@ export function CryptoDashboard() {
             anchorReference="anchorPosition"
             slotProps={{
               paper: {
-                className: 'o-crypto-dashboard__context-menu',
+                className: 'p-crypto-dashboard__context-menu',
                 onContextMenu: handleContextMenuOnOverlay
               },
               backdrop: {
-                className: 'o-crypto-dashboard__context-menu-backdrop',
+                className: 'p-crypto-dashboard__context-menu-backdrop',
                 onContextMenu: handleContextMenuOnOverlay
               },
-              list: { className: 'o-crypto-dashboard__context-menu-list' }
+              list: { className: 'p-crypto-dashboard__context-menu-list' }
             }}
             anchorPosition={
               contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined
@@ -595,104 +595,104 @@ export function CryptoDashboard() {
           >
             {contextMenu && (
               <>
-                <Box className="o-crypto-dashboard__context-menu-heading">
-                  <Typography className="o-crypto-dashboard__context-menu-label">Token</Typography>
-                  <Typography className="o-crypto-dashboard__context-menu-symbol">
+                <Box className="p-crypto-dashboard__context-menu-heading">
+                  <Typography className="p-crypto-dashboard__context-menu-label">Token</Typography>
+                  <Typography className="p-crypto-dashboard__context-menu-symbol">
                     {contextMenu.token.futuresSymbol}
                   </Typography>
                 </Box>
                 <MenuItem
-                  className="o-crypto-dashboard__context-menu-item"
+                  className="p-crypto-dashboard__context-menu-item"
                   onClick={() => {
                     toggleWatchlist(contextMenu.token.futuresSymbol);
                     setContextMenu(null);
                   }}
                 >
-                  <Box component="span" className="o-crypto-dashboard__context-menu-icon-wrap">
+                  <Box component="span" className="p-crypto-dashboard__context-menu-icon-wrap">
                     {isWatchlisted(contextMenu.token.futuresSymbol) ? (
-                      <StarRoundedIcon className="o-crypto-dashboard__context-menu-icon" />
+                      <StarRoundedIcon className="p-crypto-dashboard__context-menu-icon" />
                     ) : (
-                      <StarBorderRoundedIcon className="o-crypto-dashboard__context-menu-icon" />
+                      <StarBorderRoundedIcon className="p-crypto-dashboard__context-menu-icon" />
                     )}
                   </Box>
-                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
                     {isWatchlisted(contextMenu.token.futuresSymbol)
                       ? 'Remove from watchlist'
                       : 'Add to watchlist'}
                   </Typography>
                 </MenuItem>
-                <Box className="o-crypto-dashboard__context-menu-section">Quick links</Box>
+                <Box className="p-crypto-dashboard__context-menu-section">Quick links</Box>
                 <MenuItem
                   component="a"
                   href={`https://www.binance.com/en/futures/${encodeURIComponent(contextMenu.token.futuresSymbol)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="o-crypto-dashboard__context-menu-item"
+                  className="p-crypto-dashboard__context-menu-item"
                   onClick={() => setContextMenu(null)}
                 >
                   <Box
                     component="span"
-                    className="o-crypto-dashboard__context-menu-icon-wrap o-crypto-dashboard__context-menu-link-icon-wrap"
+                    className="p-crypto-dashboard__context-menu-icon-wrap p-crypto-dashboard__context-menu-link-icon-wrap"
                   >
                     <Box
                       component="img"
                       src="https://bin.bnbstatic.com/static/images/common/favicon.ico"
                       alt=""
-                      className="o-crypto-dashboard__context-menu-link-logo"
+                      className="p-crypto-dashboard__context-menu-link-logo"
                     />
                   </Box>
-                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
                     Binance Futures
                   </Typography>
-                  <OpenInNewRoundedIcon className="o-crypto-dashboard__context-menu-external-icon" />
+                  <OpenInNewRoundedIcon className="p-crypto-dashboard__context-menu-external-icon" />
                 </MenuItem>
                 <MenuItem
                   component="a"
                   href={`https://www.coinglass.com/tv/Binance_${encodeURIComponent(contextMenu.token.futuresSymbol)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="o-crypto-dashboard__context-menu-item"
+                  className="p-crypto-dashboard__context-menu-item"
                   onClick={() => setContextMenu(null)}
                 >
                   <Box
                     component="span"
-                    className="o-crypto-dashboard__context-menu-icon-wrap o-crypto-dashboard__context-menu-link-icon-wrap"
+                    className="p-crypto-dashboard__context-menu-icon-wrap p-crypto-dashboard__context-menu-link-icon-wrap"
                   >
                     <Box
                       component="img"
                       src="https://cdn.coinglasscdn.com/static/icon_200.png"
                       alt=""
-                      className="o-crypto-dashboard__context-menu-link-logo"
+                      className="p-crypto-dashboard__context-menu-link-logo"
                     />
                   </Box>
-                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
                     CoinGlass
                   </Typography>
-                  <OpenInNewRoundedIcon className="o-crypto-dashboard__context-menu-external-icon" />
+                  <OpenInNewRoundedIcon className="p-crypto-dashboard__context-menu-external-icon" />
                 </MenuItem>
                 <MenuItem
                   component="a"
                   href={getCoinMarketCapUrl(contextMenu.token)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="o-crypto-dashboard__context-menu-item"
+                  className="p-crypto-dashboard__context-menu-item"
                   onClick={() => setContextMenu(null)}
                 >
                   <Box
                     component="span"
-                    className="o-crypto-dashboard__context-menu-icon-wrap o-crypto-dashboard__context-menu-link-icon-wrap"
+                    className="p-crypto-dashboard__context-menu-icon-wrap p-crypto-dashboard__context-menu-link-icon-wrap"
                   >
                     <Box
                       component="img"
                       src="https://coinmarketcap.com/favicon.ico"
                       alt=""
-                      className="o-crypto-dashboard__context-menu-link-logo"
+                      className="p-crypto-dashboard__context-menu-link-logo"
                     />
                   </Box>
-                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
                     CoinMarketCap
                   </Typography>
-                  <OpenInNewRoundedIcon className="o-crypto-dashboard__context-menu-external-icon" />
+                  <OpenInNewRoundedIcon className="p-crypto-dashboard__context-menu-external-icon" />
                 </MenuItem>
               </>
             )}

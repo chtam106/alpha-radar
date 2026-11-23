@@ -4,20 +4,20 @@ import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material
 import { useEffect } from 'react';
 import { ScrollToEdgeButton } from '@/components/atoms/scroll-to-edge-button';
 import { GlobalHeader } from '@/components/organisms/global-header';
-import { HomePage } from '@/components/organisms/home-page';
-import { CryptoDashboard } from '@/components/organisms/crypto-dashboard';
+import { HomePage } from '@/pages/home-page';
+import { CryptoDashboard } from '@/pages/crypto-dashboard';
 import { appTheme } from '@/theme';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import.meta.glob('./**/*.scss', { eager: true });
 
 const CoinChartPage = lazy(() =>
-  import('@/components/organisms/coin-chart-page').then(({ CoinChartPage: Page }) => ({
+  import('@/pages/coin-chart-page').then(({ CoinChartPage: Page }) => ({
     default: Page
   }))
 );
 const WatchlistPage = lazy(() =>
-  import('@/components/organisms/watchlist-page').then(({ WatchlistPage: Page }) => ({
+  import('@/pages/watchlist-page').then(({ WatchlistPage: Page }) => ({
     default: Page
   }))
 );

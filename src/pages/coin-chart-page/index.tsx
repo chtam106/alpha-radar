@@ -530,12 +530,12 @@ export function CoinChartPage() {
   });
 
   return (
-    <Container maxWidth="lg" className="o-coin-chart-page">
-      <Box component="main" className="o-coin-chart-page__main">
+    <Container maxWidth="lg" className="p-coin-chart-page">
+      <Box component="main" className="p-coin-chart-page__main">
         <Stack spacing={3}>
-          <Box className="o-coin-chart-page__heading">
+          <Box className="p-coin-chart-page__heading">
             <Autocomplete
-              className="o-coin-chart-page__contract-picker"
+              className="p-coin-chart-page__contract-picker"
               options={futuresSymbols}
               value={futuresSymbols.find((futuresSymbol) => futuresSymbol === symbol) ?? null}
               onChange={(_, selectedSymbol) => {
@@ -552,9 +552,9 @@ export function CoinChartPage() {
                 />
               )}
             />
-            <Stack direction="row" spacing={1.5} className="o-coin-chart-page__heading-actions">
+            <Stack direction="row" spacing={1.5} className="p-coin-chart-page__heading-actions">
               <Button
-                className="o-coin-chart-page__watchlist-button"
+                className="p-coin-chart-page__watchlist-button"
                 size="small"
                 variant="outlined"
                 onClick={() => toggleWatchlist(symbol)}
@@ -562,7 +562,7 @@ export function CoinChartPage() {
                 {watchlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
               </Button>
               <Button
-                className="o-coin-chart-page__exchange-button"
+                className="p-coin-chart-page__exchange-button"
                 size="small"
                 component="a"
                 href={exchangeUrl}
@@ -576,12 +576,12 @@ export function CoinChartPage() {
             </Stack>
           </Box>
 
-          <Paper elevation={0} className="o-coin-chart-page__chart-panel">
+          <Paper elevation={0} className="p-coin-chart-page__chart-panel">
             <Tabs
               value={activeTab}
               onChange={(_, value: 'chart' | 'data' | 'links') => setActiveTab(value)}
               aria-label="Futures views"
-              className="o-coin-chart-page__tabs"
+              className="p-coin-chart-page__tabs"
             >
               <Tab
                 label="Chart"
@@ -605,13 +605,13 @@ export function CoinChartPage() {
 
             {activeTab === 'chart' ? (
               <Box role="tabpanel" id="futures-chart-panel" aria-labelledby="futures-chart-tab">
-                <Box className="o-coin-chart-page__toolbar">
+                <Box className="p-coin-chart-page__toolbar">
                   <ToggleButtonGroup
                     size="small"
                     exclusive
                     value={interval}
                     aria-label="Chart interval"
-                    className="o-coin-chart-page__interval-group"
+                    className="p-coin-chart-page__interval-group"
                     onChange={(_, value: BinanceFuturesInterval | null) => {
                       if (value) {
                         setInterval(value);
@@ -628,35 +628,35 @@ export function CoinChartPage() {
                     <Stack
                       direction="row"
                       spacing={1.5}
-                      className="o-coin-chart-page__candle-data"
+                      className="p-coin-chart-page__candle-data"
                       aria-label="Candle OHLCV data"
                     >
-                      <Typography variant="caption" className="o-coin-chart-page__candle-value">
-                        <Box component="span" className="o-coin-chart-page__candle-label">
+                      <Typography variant="caption" className="p-coin-chart-page__candle-value">
+                        <Box component="span" className="p-coin-chart-page__candle-label">
                           O
                         </Box>
                         {formatPrice(displayedCandle.open, priceFormat.precision)}
                       </Typography>
-                      <Typography variant="caption" className="o-coin-chart-page__candle-value">
-                        <Box component="span" className="o-coin-chart-page__candle-label">
+                      <Typography variant="caption" className="p-coin-chart-page__candle-value">
+                        <Box component="span" className="p-coin-chart-page__candle-label">
                           H
                         </Box>
                         {formatPrice(displayedCandle.high, priceFormat.precision)}
                       </Typography>
-                      <Typography variant="caption" className="o-coin-chart-page__candle-value">
-                        <Box component="span" className="o-coin-chart-page__candle-label">
+                      <Typography variant="caption" className="p-coin-chart-page__candle-value">
+                        <Box component="span" className="p-coin-chart-page__candle-label">
                           L
                         </Box>
                         {formatPrice(displayedCandle.low, priceFormat.precision)}
                       </Typography>
-                      <Typography variant="caption" className="o-coin-chart-page__candle-value">
-                        <Box component="span" className="o-coin-chart-page__candle-label">
+                      <Typography variant="caption" className="p-coin-chart-page__candle-value">
+                        <Box component="span" className="p-coin-chart-page__candle-label">
                           C
                         </Box>
                         {formatPrice(displayedCandle.close, priceFormat.precision)}
                       </Typography>
-                      <Typography variant="caption" className="o-coin-chart-page__candle-value">
-                        <Box component="span" className="o-coin-chart-page__candle-label">
+                      <Typography variant="caption" className="p-coin-chart-page__candle-value">
+                        <Box component="span" className="p-coin-chart-page__candle-label">
                           Vol
                         </Box>
                         {volumeFormatter.format(displayedCandle.volume)}
@@ -664,13 +664,13 @@ export function CoinChartPage() {
                     </Stack>
                   )}
                   <Box
-                    className={`o-coin-chart-page__live-status o-coin-chart-page__live-status--${streamStatus}`}
+                    className={`p-coin-chart-page__live-status p-coin-chart-page__live-status--${streamStatus}`}
                     role="status"
                     aria-live="polite"
                   >
                     <Box
                       component="span"
-                      className="o-coin-chart-page__live-dot"
+                      className="p-coin-chart-page__live-dot"
                       aria-hidden="true"
                     />
                     <Typography variant="caption">
@@ -686,24 +686,24 @@ export function CoinChartPage() {
                 </Box>
 
                 {priceError && (
-                  <Alert severity="warning" className="o-coin-chart-page__alert">
+                  <Alert severity="warning" className="p-coin-chart-page__alert">
                     Live price update unavailable: {priceError}
                   </Alert>
                 )}
 
                 {error ? (
-                  <Alert severity="error" className="o-coin-chart-page__alert">
+                  <Alert severity="error" className="p-coin-chart-page__alert">
                     {error}
                   </Alert>
                 ) : loading ? (
-                  <Box className="o-coin-chart-page__state">
+                  <Box className="p-coin-chart-page__state">
                     <CircularProgress size={28} />
                     <Typography color="text.secondary">Loading Futures candles…</Typography>
                   </Box>
                 ) : (
                   <Box
                     ref={chartContainerRef}
-                    className="o-coin-chart-page__canvas"
+                    className="p-coin-chart-page__canvas"
                     role="img"
                     aria-label={`${symbol} ${interval} candlestick chart with volume`}
                   />
@@ -712,7 +712,7 @@ export function CoinChartPage() {
                 <Typography
                   variant="caption"
                   color="text.secondary"
-                  className="o-coin-chart-page__note"
+                  className="p-coin-chart-page__note"
                 >
                   Candlestick and volume data from Binance USDⓈ-M Futures.{' '}
                   <MuiLink
@@ -730,145 +730,145 @@ export function CoinChartPage() {
                 role="tabpanel"
                 id="futures-data-panel"
                 aria-labelledby="futures-data-tab"
-                className="o-coin-chart-page__data-panel"
+                className="p-coin-chart-page__data-panel"
               >
                 {metricsError ? (
-                  <Alert severity="error" className="o-coin-chart-page__alert">
+                  <Alert severity="error" className="p-coin-chart-page__alert">
                     {metricsError}
                   </Alert>
                 ) : metricsLoading ? (
-                  <Box className="o-coin-chart-page__state">
+                  <Box className="p-coin-chart-page__state">
                     <CircularProgress size={28} />
                     <Typography color="text.secondary">Loading current token data…</Typography>
                   </Box>
                 ) : (
-                  <Box className="o-coin-chart-page__data-content">
-                    <Box className="o-coin-chart-page__data-heading">
+                  <Box className="p-coin-chart-page__data-content">
+                    <Box className="p-coin-chart-page__data-heading">
                       <Typography variant="h6">Overview</Typography>
                       <Typography variant="caption" color="text.secondary">
                         {symbol} · Current and all-time
                       </Typography>
                     </Box>
                     {extremesError && (
-                      <Alert severity="error" className="o-coin-chart-page__alert">
+                      <Alert severity="error" className="p-coin-chart-page__alert">
                         {extremesError}
                       </Alert>
                     )}
-                    <Box component="dl" className="o-coin-chart-page__data-list">
-                      <Box className="o-coin-chart-page__data-row">
-                        <Typography component="dt" className="o-coin-chart-page__metric-label">
+                    <Box component="dl" className="p-coin-chart-page__data-list">
+                      <Box className="p-coin-chart-page__data-row">
+                        <Typography component="dt" className="p-coin-chart-page__metric-label">
                           Market Cap
                         </Typography>
-                        <Typography component="dd" className="o-coin-chart-page__metric-value">
+                        <Typography component="dd" className="p-coin-chart-page__metric-value">
                           {formatMetric(currentMetrics?.marketCap ?? null, usdMetricFormatter)}
                         </Typography>
                       </Box>
-                      <Box className="o-coin-chart-page__data-row">
-                        <Typography component="dt" className="o-coin-chart-page__metric-label">
+                      <Box className="p-coin-chart-page__data-row">
+                        <Typography component="dt" className="p-coin-chart-page__metric-label">
                           FDV
                         </Typography>
-                        <Typography component="dd" className="o-coin-chart-page__metric-value">
+                        <Typography component="dd" className="p-coin-chart-page__metric-value">
                           {formatMetric(currentMetrics?.fdv ?? null, usdMetricFormatter)}
                         </Typography>
                       </Box>
-                      <Box className="o-coin-chart-page__data-row">
-                        <Typography component="dt" className="o-coin-chart-page__metric-label">
+                      <Box className="p-coin-chart-page__data-row">
+                        <Typography component="dt" className="p-coin-chart-page__metric-label">
                           Circulating Supply
                         </Typography>
-                        <Typography component="dd" className="o-coin-chart-page__metric-value">
+                        <Typography component="dd" className="p-coin-chart-page__metric-value">
                           {formatMetric(currentMetrics?.circulatingSupply ?? null, supplyFormatter)}
                         </Typography>
                       </Box>
-                      <Box className="o-coin-chart-page__data-row">
-                        <Typography component="dt" className="o-coin-chart-page__metric-label">
+                      <Box className="p-coin-chart-page__data-row">
+                        <Typography component="dt" className="p-coin-chart-page__metric-label">
                           Total Supply
                         </Typography>
-                        <Typography component="dd" className="o-coin-chart-page__metric-value">
+                        <Typography component="dd" className="p-coin-chart-page__metric-value">
                           {formatMetric(currentMetrics?.totalSupply ?? null, supplyFormatter)}
                         </Typography>
                       </Box>
-                      <Box className="o-coin-chart-page__data-row">
-                        <Typography component="dt" className="o-coin-chart-page__metric-label">
+                      <Box className="p-coin-chart-page__data-row">
+                        <Typography component="dt" className="p-coin-chart-page__metric-label">
                           Token Unlock
                         </Typography>
-                        <Typography component="dd" className="o-coin-chart-page__metric-value">
+                        <Typography component="dd" className="p-coin-chart-page__metric-value">
                           {currentUnlockPercent === null || currentUnlockPercent === undefined
                             ? 'No data'
                             : `${percentFormatter.format(currentUnlockPercent)}%`}
                         </Typography>
                       </Box>
-                      <Box className="o-coin-chart-page__data-row">
-                        <Typography component="dt" className="o-coin-chart-page__metric-label">
+                      <Box className="p-coin-chart-page__data-row">
+                        <Typography component="dt" className="p-coin-chart-page__metric-label">
                           ATH
                         </Typography>
-                        <Typography component="dd" className="o-coin-chart-page__metric-value">
+                        <Typography component="dd" className="p-coin-chart-page__metric-value">
                           {formatExtreme('ath')}
                         </Typography>
                       </Box>
-                      <Box className="o-coin-chart-page__data-row">
-                        <Typography component="dt" className="o-coin-chart-page__metric-label">
+                      <Box className="p-coin-chart-page__data-row">
+                        <Typography component="dt" className="p-coin-chart-page__metric-label">
                           ATL
                         </Typography>
-                        <Typography component="dd" className="o-coin-chart-page__metric-value">
+                        <Typography component="dd" className="p-coin-chart-page__metric-value">
                           {formatExtreme('atl')}
                         </Typography>
                       </Box>
                     </Box>
-                    <Box className="o-coin-chart-page__data-section">
-                      <Box className="o-coin-chart-page__data-heading">
+                    <Box className="p-coin-chart-page__data-section">
+                      <Box className="p-coin-chart-page__data-heading">
                         <Typography variant="subtitle1">Data at ATH</Typography>
                         <Typography variant="caption" color="text.secondary">
                           Historical snapshot
                         </Typography>
                       </Box>
-                      <Box component="dl" className="o-coin-chart-page__data-list">
-                        <Box className="o-coin-chart-page__data-row">
-                          <Typography component="dt" className="o-coin-chart-page__metric-label">
+                      <Box component="dl" className="p-coin-chart-page__data-list">
+                        <Box className="p-coin-chart-page__data-row">
+                          <Typography component="dt" className="p-coin-chart-page__metric-label">
                             Market Cap
                           </Typography>
-                          <Typography component="dd" className="o-coin-chart-page__metric-value">
+                          <Typography component="dd" className="p-coin-chart-page__metric-value">
                             No data
                           </Typography>
                         </Box>
-                        <Box className="o-coin-chart-page__data-row">
-                          <Typography component="dt" className="o-coin-chart-page__metric-label">
+                        <Box className="p-coin-chart-page__data-row">
+                          <Typography component="dt" className="p-coin-chart-page__metric-label">
                             FDV
                           </Typography>
-                          <Typography component="dd" className="o-coin-chart-page__metric-value">
+                          <Typography component="dd" className="p-coin-chart-page__metric-value">
                             No data
                           </Typography>
                         </Box>
-                        <Box className="o-coin-chart-page__data-row">
-                          <Typography component="dt" className="o-coin-chart-page__metric-label">
+                        <Box className="p-coin-chart-page__data-row">
+                          <Typography component="dt" className="p-coin-chart-page__metric-label">
                             Token Unlock
                           </Typography>
-                          <Typography component="dd" className="o-coin-chart-page__metric-value">
+                          <Typography component="dd" className="p-coin-chart-page__metric-value">
                             No data
                           </Typography>
                         </Box>
                       </Box>
                     </Box>
-                    <Box className="o-coin-chart-page__data-section">
-                      <Box className="o-coin-chart-page__data-heading">
+                    <Box className="p-coin-chart-page__data-section">
+                      <Box className="p-coin-chart-page__data-heading">
                         <Typography variant="subtitle1">Data at $27.5B FDV</Typography>
                         <Typography variant="caption" color="text.secondary">
                           Based on current supply
                         </Typography>
                       </Box>
-                      <Box component="dl" className="o-coin-chart-page__data-list">
-                        <Box className="o-coin-chart-page__data-row">
-                          <Typography component="dt" className="o-coin-chart-page__metric-label">
+                      <Box component="dl" className="p-coin-chart-page__data-list">
+                        <Box className="p-coin-chart-page__data-row">
+                          <Typography component="dt" className="p-coin-chart-page__metric-label">
                             Price
                           </Typography>
-                          <Typography component="dd" className="o-coin-chart-page__metric-value">
+                          <Typography component="dd" className="p-coin-chart-page__metric-value">
                             {formatMetric(priceAtTargetFdv, targetPriceFormatter)}
                           </Typography>
                         </Box>
-                        <Box className="o-coin-chart-page__data-row">
-                          <Typography component="dt" className="o-coin-chart-page__metric-label">
+                        <Box className="p-coin-chart-page__data-row">
+                          <Typography component="dt" className="p-coin-chart-page__metric-label">
                             Market Cap
                           </Typography>
-                          <Typography component="dd" className="o-coin-chart-page__metric-value">
+                          <Typography component="dd" className="p-coin-chart-page__metric-value">
                             {formatMetric(marketCapAtTargetFdv, usdMetricFormatter)}
                           </Typography>
                         </Box>
@@ -882,12 +882,12 @@ export function CoinChartPage() {
                 role="tabpanel"
                 id="futures-links-panel"
                 aria-labelledby="futures-links-tab"
-                className="o-coin-chart-page__links-panel"
+                className="p-coin-chart-page__links-panel"
               >
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
                   spacing={2}
-                  className="o-coin-chart-page__resource-links"
+                  className="p-coin-chart-page__resource-links"
                 >
                   <MuiLink
                     href={exchangeUrl}
@@ -895,14 +895,14 @@ export function CoinChartPage() {
                     rel="noopener noreferrer"
                     underline="none"
                     color="inherit"
-                    className="o-coin-chart-page__resource-link"
+                    className="p-coin-chart-page__resource-link"
                   >
                     <Box
                       component="img"
                       src="https://bin.bnbstatic.com/static/images/common/favicon.ico"
                       alt=""
                       referrerPolicy="no-referrer"
-                      className="o-coin-chart-page__resource-icon"
+                      className="p-coin-chart-page__resource-icon"
                     />
                     <Typography component="span">Binance Futures</Typography>
                     <ArrowOutwardRoundedIcon fontSize="small" />
@@ -913,14 +913,14 @@ export function CoinChartPage() {
                     rel="noopener noreferrer"
                     underline="none"
                     color="inherit"
-                    className="o-coin-chart-page__resource-link"
+                    className="p-coin-chart-page__resource-link"
                   >
                     <Box
                       component="img"
                       src="https://cdn.coinglasscdn.com/static/icon_200.png"
                       alt=""
                       referrerPolicy="no-referrer"
-                      className="o-coin-chart-page__resource-icon"
+                      className="p-coin-chart-page__resource-icon"
                     />
                     <Typography component="span">CoinGlass</Typography>
                     <ArrowOutwardRoundedIcon fontSize="small" />
@@ -931,14 +931,14 @@ export function CoinChartPage() {
                     rel="noopener noreferrer"
                     underline="none"
                     color="inherit"
-                    className="o-coin-chart-page__resource-link"
+                    className="p-coin-chart-page__resource-link"
                   >
                     <Box
                       component="img"
                       src="https://coinmarketcap.com/favicon.ico"
                       alt=""
                       referrerPolicy="no-referrer"
-                      className="o-coin-chart-page__resource-icon"
+                      className="p-coin-chart-page__resource-icon"
                     />
                     <Typography component="span">CoinMarketCap</Typography>
                     <ArrowOutwardRoundedIcon fontSize="small" />
