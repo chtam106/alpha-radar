@@ -14,6 +14,7 @@ export interface BscAlphaToken {
   symbol: string;
   futuresSymbol: string;
   contractAddress: string;
+  liquidity: number | null;
   cmcSlug: string | null;
   iconUrl: string | null;
   price: number | null;
@@ -51,6 +52,7 @@ interface AlphaTokenCandidate {
   name: string;
   symbol: string;
   contractAddress: string;
+  liquidity: number | null;
   iconUrl: string | null;
   price: number | null;
   totalSupply: number | null;
@@ -138,6 +140,7 @@ function parseAlphaTokenCandidate(value: unknown): AlphaTokenCandidate | null {
     name,
     symbol,
     contractAddress,
+    liquidity: parseNumericValue(value.liquidity),
     iconUrl: typeof value.iconUrl === 'string' ? value.iconUrl : null,
     price: parseNumericValue(value.price),
     totalSupply,
@@ -315,6 +318,7 @@ export async function fetchBscAlphaTokens(signal?: AbortSignal): Promise<BscAlph
           symbol: token.symbol,
           futuresSymbol: token.futuresSymbol,
           contractAddress: token.contractAddress,
+          liquidity: token.liquidity,
           cmcSlug: coinMarketCapSupply?.slug ?? null,
           iconUrl: token.iconUrl,
           price: token.price,

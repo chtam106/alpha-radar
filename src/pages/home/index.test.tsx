@@ -18,6 +18,7 @@ const tokens: BscAlphaToken[] = [
     symbol: 'ALPHA',
     futuresSymbol: 'ALPHAUSDT',
     contractAddress: '0xalpha',
+    liquidity: 100_000,
     cmcSlug: 'alpha-token',
     iconUrl: null,
     price: 0.1,
@@ -33,6 +34,7 @@ const tokens: BscAlphaToken[] = [
     symbol: 'BETA',
     futuresSymbol: 'BETAUSDT',
     contractAddress: '0xbeta',
+    liquidity: 200_000,
     cmcSlug: 'beta-token',
     iconUrl: null,
     price: 0.2,
@@ -74,7 +76,7 @@ describe('Home page', () => {
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT', 'BETAUSDT']);
     expect(screen.getByText('2 coins match')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /market cap/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'MC' }));
     expect(getVisibleSymbols()).toEqual(['BETAUSDT', 'ALPHAUSDT']);
     expect(window.localStorage.getItem('crypto-dashboard:sort-preference')).toBe('marketCap:desc');
 

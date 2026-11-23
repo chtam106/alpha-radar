@@ -22,7 +22,7 @@ export const Default: Story = {
         id: 'bitcoin',
         futuresSymbol: 'BTCUSDT',
         symbol: 'BTC',
-        name: 'Bitcoin',
+        liquidity: 2_500_000_000,
         iconUrl: null,
         price: 65000,
         marketCap: 1_280_000_000_000,

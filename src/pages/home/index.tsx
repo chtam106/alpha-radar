@@ -146,7 +146,7 @@ export function HomePage() {
         id: token.tokenId,
         futuresSymbol: token.futuresSymbol,
         symbol: token.symbol,
-        name: token.name,
+        liquidity: token.liquidity,
         iconUrl: token.iconUrl,
         price: token.price,
         marketCap: token.marketCap,

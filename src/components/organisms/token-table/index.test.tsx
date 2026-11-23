@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { TokenTable, type TokenTableRowData } from './index';
 
@@ -6,7 +6,7 @@ const row: TokenTableRowData = {
   id: 'alpha',
   futuresSymbol: 'ALPHAUSDT',
   symbol: 'ALPHA',
-  name: 'Alpha Token',
+  liquidity: 1234567.89,
   iconUrl: null,
   price: null,
   marketCap: null,
@@ -28,8 +28,26 @@ describe('TokenTable', () => {
       />
     );
 
-    expect(screen.getByRole('table', { name: 'Test token table' })).toBeInTheDocument();
-    expect(screen.getByText('Alpha Token')).toBeInTheDocument();
+    const table = screen.getByRole('table', { name: 'Test token table' });
+    const firstHeaderRow = within(table).getAllByRole('row')[0];
+    const chainLiquidityHeader = within(firstHeaderRow).getByRole('columnheader', {
+      name: 'Chain.Lq'
+    });
+    const targetFdvHeader = within(firstHeaderRow).getByRole('columnheader', {
+      name: '@ $27.5B FDV'
+    });
+    expect(
+      within(firstHeaderRow).getByRole('columnheader', { name: 'T.Supply' })
+    ).toBeInTheDocument();
+    const headerOrder = Array.from(firstHeaderRow.querySelectorAll('th')).map((cell) =>
+      cell.textContent?.trim()
+    );
+    expect(headerOrder.indexOf(chainLiquidityHeader.textContent?.trim())).toBeLessThan(
+      headerOrder.indexOf(targetFdvHeader.textContent?.trim())
+    );
+    expect(screen.getByRole('cell', { name: '$1.23M' })).toBeInTheDocument();
+    expect(screen.getByText('ALPHA')).toBeInTheDocument();
+    expect(screen.queryByText('Alpha Token')).not.toBeInTheDocument();
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(6);
 
     fireEvent.click(screen.getByRole('button', { name: 'FDV' }));
