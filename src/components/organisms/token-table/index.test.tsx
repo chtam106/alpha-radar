@@ -26,7 +26,7 @@ describe('TokenTable', () => {
       name: 'Chain.Lq'
     });
     const targetFdvHeader = within(firstHeaderRow).getByRole('columnheader', {
-      name: '@ $27.5B FDV'
+      name: 'If FDV reaches $27.5B'
     });
     expect(
       within(firstHeaderRow).getByRole('columnheader', { name: 'T.Supply' })
@@ -70,7 +70,7 @@ describe('TokenTable', () => {
     expect(within(metrics).getByText('23.45%')).toBeInTheDocument();
     expect(within(metrics).getByText('Total supply')).toBeInTheDocument();
     expect(within(metrics).getByText('10M')).toBeInTheDocument();
-    const targetGroup = within(card).getByText('@ $27.5B FDV').parentElement;
+    const targetGroup = within(card).getByText('If FDV reaches $27.5B').parentElement;
     if (!targetGroup) throw new Error('Target FDV group is missing');
     expect(within(targetGroup).getByText('Price')).toBeInTheDocument();
     expect(within(targetGroup).getByText('MC')).toBeInTheDocument();
