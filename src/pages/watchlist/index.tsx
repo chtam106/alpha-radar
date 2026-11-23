@@ -25,7 +25,8 @@ export function WatchlistPage() {
   const { watchlist, toggleWatchlist } = useWatchlist();
   const [contextMenu, setContextMenu] = useState<{
     symbol: string;
-    tokenName: string;
+    tokenSymbol: string;
+    iconUrl: string | null;
     coinMarketCapUrl: string;
     mouseX: number;
     mouseY: number;
@@ -91,7 +92,8 @@ export function WatchlistPage() {
     const token = tokensBySymbol.get(symbol.toUpperCase()) ?? null;
     setContextMenu({
       symbol,
-      tokenName: token?.name ?? symbol.replace(/(?:USDT|USDC)$/, ''),
+      tokenSymbol: token?.symbol ?? symbol.replace(/(?:USDT|USDC)$/, ''),
+      iconUrl: token?.iconUrl ?? null,
       coinMarketCapUrl: getWatchedTokenCoinMarketCapUrl(symbol, token),
       mouseX,
       mouseY
@@ -198,7 +200,8 @@ export function WatchlistPage() {
             token={
               contextMenu
                 ? {
-                    name: contextMenu.tokenName,
+                    symbol: contextMenu.tokenSymbol,
+                    iconUrl: contextMenu.iconUrl,
                     futuresSymbol: contextMenu.symbol,
                     coinMarketCapUrl: contextMenu.coinMarketCapUrl,
                     isWatchlisted: true

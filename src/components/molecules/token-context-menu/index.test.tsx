@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
-import { TokenContextMenu } from './index';
+import { TokenContextMenu, type TokenContextMenuItem } from './index';
 
-const token = {
-  name: 'Alpha Token',
+const token: TokenContextMenuItem = {
+  symbol: 'ALPHA',
+  iconUrl: null,
   futuresSymbol: 'ALPHA/USDT',
   coinMarketCapUrl: 'https://coinmarketcap.com/currencies/alpha-token/',
   isWatchlisted: false
@@ -27,6 +28,33 @@ function renderMenu(props: {
 }
 
 describe('TokenContextMenu', () => {
+  it('shows the token icon or its symbol initial when no icon is available', () => {
+    const { container, rerender } = renderMenu({
+      token,
+      onClose: vi.fn(),
+      onToggleWatchlist: vi.fn()
+    });
+    expect(screen.getByText('ALPHA')).toBeInTheDocument();
+    expect(
+      container.ownerDocument.querySelector('.m-token-context-menu__token-icon')
+    ).toHaveTextContent('A');
+
+    rerender(
+      <MemoryRouter initialEntries={['/']}>
+        <TokenContextMenu
+          token={{ ...token, iconUrl: 'https://example.com/alpha.png' }}
+          anchorPosition={{ top: 100, left: 100 }}
+          onClose={vi.fn()}
+          onToggleWatchlist={vi.fn()}
+          onContextMenuOverlay={vi.fn()}
+        />
+      </MemoryRouter>
+    );
+    expect(
+      container.ownerDocument.querySelector('.m-token-context-menu__token-icon img')
+    ).toHaveAttribute('src', 'https://example.com/alpha.png');
+  });
+
   it('only opens with a token and anchor and invokes watchlist actions', async () => {
     const onClose = vi.fn();
     const onToggleWatchlist = vi.fn();

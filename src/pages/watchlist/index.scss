@@ -47,6 +47,14 @@
     text-align: center;
   }
 
+  @media (width < 1140px) {
+    &__list-panel {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+  }
+
   @media (width <= 600px) {
     padding-top: 16px;
 

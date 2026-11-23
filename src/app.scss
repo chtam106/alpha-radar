@@ -12,6 +12,10 @@
   --app-accent-subtle: rgb(240 185 11 / 8%);
   --app-accent-border: rgb(240 185 11 / 22%);
   --app-accent-faint: rgb(240 185 11 / 8%);
+
+  @media (width <= 600px) {
+    font-size: 14px;
+  }
 }
 
 body {

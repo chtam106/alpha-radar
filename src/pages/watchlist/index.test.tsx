@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BscAlphaToken } from '@/services/binance-alpha';
@@ -19,7 +19,7 @@ const alphaToken: BscAlphaToken = {
   contractAddress: '0xalpha',
   liquidity: 100_000,
   cmcSlug: 'alpha-token',
-  iconUrl: null,
+  iconUrl: 'https://example.com/alpha.png',
   price: 0.1,
   marketCap: 100,
   fdv: 500,
@@ -53,14 +53,20 @@ describe('Watchlist page', () => {
     fetchBscAlphaTokensMock.mockResolvedValue([alphaToken]);
     renderWatchlist();
 
-    await screen.findByRole('table', { name: 'Saved futures watchlist' });
-    expect(screen.getByText('ALPHA')).toBeInTheDocument();
+    const table = await screen.findByRole('table', { name: 'Saved futures watchlist' });
+    expect(within(table).getByText('ALPHA')).toBeInTheDocument();
     expect(screen.queryByText('Alpha Token')).not.toBeInTheDocument();
 
     fireEvent.contextMenu(screen.getByRole('row', { name: 'Open ALPHAUSDT actions menu' }), {
       clientX: 160,
       clientY: 220
     });
+    const menu = await screen.findByRole('menu');
+    expect(within(menu).getByText('ALPHA')).toBeInTheDocument();
+    expect(menu.querySelector('.m-token-context-menu__token-icon img')).toHaveAttribute(
+      'src',
+      'https://example.com/alpha.png'
+    );
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove from watchlist' }));
 
     await waitFor(() => {
@@ -74,8 +80,8 @@ describe('Watchlist page', () => {
     fetchBscAlphaTokensMock.mockResolvedValue([]);
     renderWatchlist();
 
-    await screen.findByRole('table', { name: 'Saved futures watchlist' });
-    expect(screen.getByText('OLD')).toBeInTheDocument();
+    const table = await screen.findByRole('table', { name: 'Saved futures watchlist' });
+    expect(within(table).getByText('OLD')).toBeInTheDocument();
     expect(screen.queryByText('Not currently in the Alpha Radar')).not.toBeInTheDocument();
   });
 
@@ -84,10 +90,13 @@ describe('Watchlist page', () => {
     fetchBscAlphaTokensMock.mockResolvedValueOnce([alphaToken]).mockResolvedValueOnce([]);
     renderWatchlist();
 
-    await screen.findByText('ALPHA');
+    const table = await screen.findByRole('table', { name: 'Saved futures watchlist' });
+    expect(within(table).getByText('ALPHA')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
     await waitFor(() => expect(fetchBscAlphaTokensMock).toHaveBeenCalledTimes(2));
-    expect(screen.getByText('ALPHA')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('table', { name: 'Saved futures watchlist' })).getByText('ALPHA')
+    ).toBeInTheDocument();
     expect(window.localStorage.getItem('crypto-dashboard:watchlist')).toBe('["ALPHAUSDT"]');
   });
 
@@ -106,7 +115,9 @@ describe('Watchlist page', () => {
     renderWatchlist();
 
     expect(await screen.findByText('CoinMarketCap proxy returned HTTP 502.')).toBeInTheDocument();
-    expect(screen.getByText('ALPHA')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('table', { name: 'Saved futures watchlist' })).getByText('ALPHA')
+    ).toBeInTheDocument();
     expect(screen.queryByText('Loading watchlist data…')).not.toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('CoinMarketCap proxy returned HTTP 502.');
   });
