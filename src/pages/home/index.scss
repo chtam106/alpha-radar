@@ -123,6 +123,13 @@
 
   &__unlock-filter {
     max-width: 520px;
+    padding-bottom: 20px;
+
+    @media (width > 600px) {
+      .p-crypto-dashboard__quick-filter-label {
+        transform: translateY(2px);
+      }
+    }
   }
 
   &__unlock-range {
@@ -132,7 +139,6 @@
 
   &__unlock-slider {
     padding: 0 10px;
-    margin-bottom: 20px;
   }
 
   &__unlock-slider &__unlock-mark {
@@ -152,7 +158,9 @@
   }
 
   &__unlock-slider &__unlock-control {
+    display: block;
     height: 6px;
+    margin-bottom: 0;
     pointer-events: none;
   }
 
@@ -167,6 +175,12 @@
 
   &__alert {
     margin: 16px 24px;
+  }
+
+  &__loading-dialog {
+    display: flex;
+    align-items: center;
+    padding: 32px;
   }
 
   &__state {

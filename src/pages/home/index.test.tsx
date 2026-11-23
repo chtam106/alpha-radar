@@ -98,25 +98,65 @@ describe('Home page', () => {
     });
     try {
       const supplyGroup = screen.getByRole('group', { name: 'Filter by total supply' });
-      const all = within(supplyGroup).getByRole('button', { name: 'All' });
       const oneB = within(supplyGroup).getByRole('button', { name: '1B' });
-      const tenB = within(supplyGroup).getByRole('button', { name: '10B' });
 
       fireEvent.click(oneB);
       expect(oneB).toHaveAttribute('aria-pressed', 'true');
-      expect(getVisibleSymbols()).toEqual(['ALPHAUSDT', 'BETAUSDT']);
-      fireEvent.click(tenB);
-      expect(tenB).toHaveAttribute('aria-pressed', 'true');
-      fireEvent.click(all);
-      expect(all).toHaveAttribute('aria-pressed', 'true');
-      expect(oneB).toHaveAttribute('aria-pressed', 'false');
-      expect(tenB).toHaveAttribute('aria-pressed', 'false');
-      fireEvent.click(tenB);
-      expect(tenB).toHaveAttribute('aria-pressed', 'true');
+      const dialog = screen.getByRole('dialog', { name: 'Filtering tokens' });
+      expect(within(dialog).getByRole('progressbar', { name: 'Filtering tokens' })).toBeVisible();
+      expect(dialog.textContent).toBe('');
+      expect(
+        screen
+          .getByRole('table', { hidden: true })
+          .querySelectorAll('tbody tr[data-futures-symbol]')
+      ).toHaveLength(2);
 
       tableRenderGate.promise = null;
       await act(async () => resolveRender());
-      expect(getVisibleSymbols()).toEqual(['BETAUSDT']);
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
+    } finally {
+      tableRenderGate.promise = null;
+      resolveRender();
+    }
+  });
+
+  it('shows the loading dialog while changing or resetting the unlock filter', async () => {
+    fetchBscAlphaTokensMock.mockResolvedValue(tokens);
+    render(
+      <MemoryRouter>
+        <Suspense fallback="Loading results">
+          <HomePage />
+        </Suspense>
+      </MemoryRouter>
+    );
+    await screen.findByRole('table');
+
+    let resolveRender = () => {};
+    function holdTable() {
+      tableRenderGate.promise = new Promise<void>((resolve) => {
+        resolveRender = resolve;
+      });
+    }
+
+    try {
+      holdTable();
+      fireEvent.keyDown(screen.getByRole('slider', { name: 'Minimum unlock' }), {
+        key: 'ArrowRight'
+      });
+      expect(screen.getByRole('dialog', { name: 'Filtering tokens' })).toBeVisible();
+      tableRenderGate.promise = null;
+      await act(async () => resolveRender());
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('slider', { name: 'Minimum unlock' })).toHaveValue('5');
+
+      holdTable();
+      fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }));
+      expect(screen.getByRole('dialog', { name: 'Filtering tokens' })).toBeVisible();
+      tableRenderGate.promise = null;
+      await act(async () => resolveRender());
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('slider', { name: 'Minimum unlock' })).toHaveValue('0');
     } finally {
       tableRenderGate.promise = null;
       resolveRender();
@@ -269,7 +309,7 @@ describe('Home page', () => {
     renderHome();
 
     await screen.findByRole('table');
-    const unlockGroup = within(screen.getByRole('group', { name: 'Filter by unlock range' }));
+    const unlockGroup = within(screen.getByRole('group', { name: 'Filter by unlocked range' }));
     const selectedClass = 'p-crypto-dashboard__unlock-mark-value--selected';
     expect(unlockGroup.getByText('0%')).toHaveClass(selectedClass);
     expect(unlockGroup.getByText('35%')).toHaveClass(selectedClass);
@@ -369,6 +409,48 @@ describe('Home page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
     await waitFor(() => expect(fetchBscAlphaTokensMock).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']));
+  });
+
+  it('shows a loading dialog during refresh and closes it when new data arrives', async () => {
+    let resolveRefresh: (value: BscAlphaToken[]) => void = () => {};
+    fetchBscAlphaTokensMock.mockResolvedValueOnce(tokens).mockImplementationOnce(
+      () =>
+        new Promise<BscAlphaToken[]>((resolve) => {
+          resolveRefresh = resolve;
+        })
+    );
+    renderHome();
+    await screen.findByRole('table');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+    const dialog = screen.getByRole('dialog', { name: 'Refreshing tokens' });
+    expect(within(dialog).getByRole('progressbar', { name: 'Refreshing tokens' })).toBeVisible();
+    expect(dialog.textContent).toBe('');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(dialog).toBeVisible();
+
+    await act(async () => resolveRefresh([tokens[0]]));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
+  });
+
+  it('closes the refresh dialog and shows an error when refresh fails', async () => {
+    let rejectRefresh: (reason: Error) => void = () => {};
+    fetchBscAlphaTokensMock.mockResolvedValueOnce(tokens).mockImplementationOnce(
+      () =>
+        new Promise<BscAlphaToken[]>((_, reject) => {
+          rejectRefresh = reject;
+        })
+    );
+    renderHome();
+    await screen.findByRole('table');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+    expect(screen.getByRole('dialog', { name: 'Refreshing tokens' })).toBeVisible();
+    await act(async () => rejectRefresh(new Error('Refresh failed.')));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('alert')).toHaveTextContent('Refresh failed.');
+    expect(getVisibleSymbols()).toEqual(['ALPHAUSDT', 'BETAUSDT']);
   });
 
   it('opens the row context menu on right-click and adds then removes a watchlist entry', async () => {
