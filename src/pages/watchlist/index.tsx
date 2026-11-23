@@ -1,8 +1,8 @@
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import { Alert, Box, Button, CircularProgress, Container, Stack, Typography } from '@mui/material';
 import { type MouseEvent as ReactMouseEvent, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { TokenContextMenu } from '@/components/molecules/token-context-menu';
+import { WatchlistFeedback } from '@/components/molecules/watchlist-feedback';
 import { TokenTable, type TokenTableRowData } from '@/components/organisms/token-table';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
@@ -21,8 +21,7 @@ function getWatchedTokenCoinMarketCapUrl(
 }
 
 export function WatchlistPage() {
-  const navigate = useNavigate();
-  const { watchlist, toggleWatchlist } = useWatchlist();
+  const { watchlist, toggleWatchlist, feedback, clearFeedback } = useWatchlist();
   const [contextMenu, setContextMenu] = useState<{
     symbol: string;
     tokenSymbol: string;
@@ -151,19 +150,18 @@ export function WatchlistPage() {
               >
                 Watchlist
               </Typography>
-              <Typography color="text.secondary">
-                Saved futures pairs are shared across tabs in this browser.
-              </Typography>
             </Box>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshRoundedIcon />}
-              onClick={() => setRefreshKey((key) => key + 1)}
-              disabled={loading}
-              className="p-watchlist-page__refresh"
-            >
-              Refresh
-            </Button>
+            {watchedTokens.length > 0 && (
+              <Button
+                variant="outlined"
+                startIcon={<RefreshRoundedIcon />}
+                onClick={() => setRefreshKey((key) => key + 1)}
+                disabled={loading}
+                className="p-watchlist-page__refresh"
+              >
+                Refresh
+              </Button>
+            )}
           </Box>
 
           {error && <Alert severity={tokens.length > 0 ? 'warning' : 'error'}>{error}</Alert>}
@@ -177,15 +175,8 @@ export function WatchlistPage() {
             <Box className="p-watchlist-page__empty">
               <Typography variant="h6">Your watchlist is empty</Typography>
               <Typography color="text.secondary">
-                Add a coin from its chart page or by right-clicking it in the Alpha Radar.
+                Tap or click a coin to open its menu, then choose Add to watchlist.
               </Typography>
-              <Button
-                variant="outlined"
-                onClick={() => navigate('/')}
-                className="p-watchlist-page__browse-button"
-              >
-                Browse Alpha Radar
-              </Button>
             </Box>
           ) : (
             <Box className="p-watchlist-page__list-panel">
@@ -219,6 +210,7 @@ export function WatchlistPage() {
             }}
             onContextMenuOverlay={handleContextMenuOnOverlay}
           />
+          <WatchlistFeedback feedback={feedback} onClose={clearFeedback} />
         </Stack>
       </Box>
     </Container>

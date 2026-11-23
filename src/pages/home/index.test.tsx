@@ -462,12 +462,17 @@ describe('Home page', () => {
     fireEvent.contextMenu(alphaRow, { clientX: 120, clientY: 180 });
 
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Add to watchlist' }));
+    expect(screen.getByRole('dialog', { name: 'Added to watchlist' })).toBeVisible();
     await waitFor(() => {
       expect(window.localStorage.getItem('crypto-dashboard:watchlist')).toBe('["ALPHAUSDT"]');
     });
 
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
+      timeout: 2500
+    });
     fireEvent.contextMenu(alphaRow, { clientX: 120, clientY: 180 });
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove from watchlist' }));
+    expect(screen.getByRole('dialog', { name: 'Removed from watchlist' })).toBeVisible();
     await waitFor(() => {
       expect(window.localStorage.getItem('crypto-dashboard:watchlist')).toBe('[]');
     });
