@@ -75,10 +75,39 @@ function getVisibleSymbols(): string[] {
   ).map((row) => row.dataset.futuresSymbol ?? '');
 }
 
+async function waitForFiltering() {
+  await waitFor(() =>
+    expect(screen.queryByRole('dialog', { name: 'Filtering tokens' })).toBeNull()
+  );
+}
+
 describe('Home page', () => {
   beforeEach(() => {
     window.localStorage.clear();
     fetchBscAlphaTokensMock.mockReset();
+  });
+
+  it('keeps the filter loading dialog visible for at least 600 ms', async () => {
+    fetchBscAlphaTokensMock.mockResolvedValue(tokens);
+    renderHome();
+    await screen.findByRole('table');
+
+    vi.useFakeTimers();
+    try {
+      fireEvent.click(
+        within(screen.getByRole('group', { name: 'Filter by total supply' })).getByRole('button', {
+          name: '1B'
+        })
+      );
+      expect(screen.getByRole('dialog', { name: 'Filtering tokens' })).toBeVisible();
+      act(() => vi.advanceTimersByTime(599));
+      expect(screen.getByRole('dialog', { name: 'Filtering tokens' })).toBeVisible();
+      act(() => vi.advanceTimersByTime(1));
+      expect(screen.queryByRole('dialog', { name: 'Filtering tokens' })).not.toBeInTheDocument();
+      expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('updates supply selections immediately while results are pending', async () => {
@@ -96,6 +125,7 @@ describe('Home page', () => {
     tableRenderGate.promise = new Promise<void>((resolve) => {
       resolveRender = resolve;
     });
+    vi.useFakeTimers();
     try {
       const supplyGroup = screen.getByRole('group', { name: 'Filter by total supply' });
       const oneB = within(supplyGroup).getByRole('button', { name: '1B' });
@@ -111,13 +141,16 @@ describe('Home page', () => {
           .querySelectorAll('tbody tr[data-futures-symbol]')
       ).toHaveLength(2);
 
+      act(() => vi.advanceTimersByTime(600));
+      expect(screen.getByRole('dialog', { name: 'Filtering tokens' })).toBeVisible();
       tableRenderGate.promise = null;
       await act(async () => resolveRender());
-      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
     } finally {
       tableRenderGate.promise = null;
       resolveRender();
+      vi.useRealTimers();
     }
   });
 
@@ -147,7 +180,7 @@ describe('Home page', () => {
       expect(screen.getByRole('dialog', { name: 'Filtering tokens' })).toBeVisible();
       tableRenderGate.promise = null;
       await act(async () => resolveRender());
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      await waitForFiltering();
       expect(screen.getByRole('slider', { name: 'Minimum unlock' })).toHaveValue('5');
 
       holdTable();
@@ -155,7 +188,7 @@ describe('Home page', () => {
       expect(screen.getByRole('dialog', { name: 'Filtering tokens' })).toBeVisible();
       tableRenderGate.promise = null;
       await act(async () => resolveRender());
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      await waitForFiltering();
       expect(screen.getByRole('slider', { name: 'Minimum unlock' })).toHaveValue('0');
     } finally {
       tableRenderGate.promise = null;
@@ -194,14 +227,17 @@ describe('Home page', () => {
 
     const supplyGroup = screen.getByRole('group', { name: 'Filter by total supply' });
     fireEvent.click(within(supplyGroup).getByRole('button', { name: '1B' }));
+    await waitForFiltering();
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
     expect(screen.getByText('1 of 2 coins match')).toBeInTheDocument();
 
     fireEvent.change(screen.getByRole('slider', { name: 'Maximum unlock' }), {
       target: { value: '20' }
     });
+    await waitForFiltering();
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
     fireEvent.click(within(supplyGroup).getByRole('button', { name: 'All' }));
+    await waitForFiltering();
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
   });
 
@@ -256,12 +292,14 @@ describe('Home page', () => {
     const minUnlock = screen.getByRole('slider', { name: 'Minimum unlock' });
     expect(minUnlock).toHaveValue('0');
     fireEvent.change(minUnlock, { target: { value: '15' } });
+    await waitForFiltering();
     expect(getVisibleSymbols()).toEqual(['MINUSDT', 'THIRTYUSDT', 'MAXUSDT']);
     expect(screen.getByText('3 of 5 coins match')).toBeInTheDocument();
 
     const maxUnlock = screen.getByRole('slider', { name: 'Maximum unlock' });
     expect(maxUnlock).toHaveValue('35');
     fireEvent.change(maxUnlock, { target: { value: '20' } });
+    await waitForFiltering();
     expect(getVisibleSymbols()).toEqual(['MINUSDT']);
     expect(minUnlock).toHaveValue('15');
     expect(maxUnlock).toHaveValue('20');
@@ -275,18 +313,24 @@ describe('Home page', () => {
     const minUnlock = screen.getByRole('slider', { name: 'Minimum unlock' });
     const maxUnlock = screen.getByRole('slider', { name: 'Maximum unlock' });
     fireEvent.change(maxUnlock, { target: { value: '20' } });
+    await waitForFiltering();
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
 
     fireEvent.change(minUnlock, { target: { value: '25' } });
+    await waitForFiltering();
     expect(minUnlock).toHaveValue('20');
     expect(maxUnlock).toHaveValue('20');
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
 
     fireEvent.change(minUnlock, { target: { value: '0' } });
+    await waitForFiltering();
     fireEvent.change(maxUnlock, { target: { value: '0' } });
+    await waitForFiltering();
     expect(maxUnlock).toHaveValue('5');
     fireEvent.change(maxUnlock, { target: { value: '35' } });
+    await waitForFiltering();
     fireEvent.change(minUnlock, { target: { value: '35' } });
+    await waitForFiltering();
     expect(minUnlock).toHaveValue('30');
   });
 
@@ -298,7 +342,9 @@ describe('Home page', () => {
     const minUnlock = screen.getByRole('slider', { name: 'Minimum unlock' });
     const maxUnlock = screen.getByRole('slider', { name: 'Maximum unlock' });
     fireEvent.keyDown(minUnlock, { key: 'ArrowRight' });
+    await waitForFiltering();
     fireEvent.keyDown(maxUnlock, { key: 'ArrowLeft' });
+    await waitForFiltering();
     expect(minUnlock).toHaveValue('5');
     expect(maxUnlock).toHaveValue('30');
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
@@ -332,12 +378,15 @@ describe('Home page', () => {
         name: '1B'
       })
     );
+    await waitForFiltering();
     fireEvent.change(screen.getByRole('slider', { name: 'Minimum unlock' }), {
       target: { value: '15' }
     });
+    await waitForFiltering();
     fireEvent.change(screen.getByRole('slider', { name: 'Maximum unlock' }), {
       target: { value: '30' }
     });
+    await waitForFiltering();
 
     const savedPreference = {
       totalSupplyFilters: [1_000_000_000],
@@ -374,10 +423,13 @@ describe('Home page', () => {
         name: '1B'
       })
     );
+    await waitForFiltering();
     fireEvent.change(screen.getByRole('slider', { name: 'Minimum unlock' }), {
       target: { value: '15' }
     });
+    await waitForFiltering();
     fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }));
+    await waitForFiltering();
 
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT', 'BETAUSDT']);
     expect(
