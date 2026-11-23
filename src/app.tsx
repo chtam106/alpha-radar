@@ -32,7 +32,7 @@ export function AppRoutes() {
       ? `${chartSymbol.toUpperCase()} | Binance Futures`
       : pathname === '/watchlist'
         ? 'Watchlist | Alpha Radar'
-        : 'Alpha Radar | Binance';
+        : 'Alpha Radar | Binance Alpha BSC Futures';
   }, [chartSymbol, pathname]);
 
   return (

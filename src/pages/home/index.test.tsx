@@ -11,6 +11,8 @@ vi.mock('@/services/binance-alpha', () => ({
 
 import { HomePage } from './index';
 
+const FILTER_PREFERENCE_STORAGE_KEY = 'crypto-dashboard:filter-preference';
+
 const tokens: BscAlphaToken[] = [
   {
     tokenId: 'alpha',
@@ -73,8 +75,23 @@ describe('Home page', () => {
     await screen.findByRole('table', {
       name: /listed in futures but not spot/i
     });
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Binance Alpha Futures Radar' })
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        /Built to find coins that have multiplied in value, like \$RAV, \$LAB, and \$BTW/
+      )
+    ).toBeInTheDocument();
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT', 'BETAUSDT']);
     expect(screen.getByText('2 coins match')).toBeInTheDocument();
+
+    const listStatus = screen
+      .getByText('2 coins match')
+      .closest('.p-crypto-dashboard__list-status');
+    expect(listStatus).toContainElement(screen.getByText(/Updated/));
+    expect(listStatus).toContainElement(screen.getByRole('button', { name: 'Reset filters' }));
+    expect(listStatus).toContainElement(screen.getByRole('button', { name: 'Refresh' }));
 
     fireEvent.click(screen.getByRole('button', { name: 'MC' }));
     expect(getVisibleSymbols()).toEqual(['BETAUSDT', 'ALPHAUSDT']);
@@ -90,6 +107,205 @@ describe('Home page', () => {
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
     fireEvent.click(within(supplyGroup).getByRole('button', { name: 'All' }));
     expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
+  });
+
+  it('filters by minimum unlock and combines it with the maximum unlock', async () => {
+    fetchBscAlphaTokensMock.mockResolvedValue([
+      {
+        ...tokens[0],
+        tokenId: 'unlock-zero',
+        symbol: 'ZERO',
+        futuresSymbol: 'ZEROUSDT',
+        marketCap: 0,
+        unlockedPercent: 0
+      },
+      {
+        ...tokens[1],
+        tokenId: 'unlock-below-minimum',
+        symbol: 'BELOW',
+        futuresSymbol: 'BELOWUSDT',
+        marketCap: 1,
+        unlockedPercent: 14.99
+      },
+      {
+        ...tokens[0],
+        tokenId: 'unlock-minimum',
+        symbol: 'MIN',
+        futuresSymbol: 'MINUSDT',
+        marketCap: 2,
+        unlockedPercent: 15
+      },
+      {
+        ...tokens[1],
+        tokenId: 'unlock-thirty',
+        symbol: 'THIRTY',
+        futuresSymbol: 'THIRTYUSDT',
+        marketCap: 3,
+        unlockedPercent: 30
+      },
+      {
+        ...tokens[1],
+        tokenId: 'unlock-max',
+        symbol: 'MAX',
+        futuresSymbol: 'MAXUSDT',
+        marketCap: 4,
+        unlockedPercent: 35
+      }
+    ]);
+    renderHome();
+
+    await screen.findByRole('table');
+    expect(getVisibleSymbols()).toHaveLength(5);
+
+    const minUnlockGroup = screen.getByRole('group', { name: 'Filter by minimum unlock' });
+    expect(within(minUnlockGroup).getByRole('button', { name: '0%' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    fireEvent.click(within(minUnlockGroup).getByRole('button', { name: '15%' }));
+    expect(getVisibleSymbols()).toEqual(['MINUSDT', 'THIRTYUSDT', 'MAXUSDT']);
+    expect(screen.getByText('3 of 5 coins match')).toBeInTheDocument();
+
+    const maxUnlockGroup = screen.getByRole('group', { name: 'Filter by maximum unlock' });
+    expect(
+      within(maxUnlockGroup)
+        .getAllByRole('button')
+        .map((button) => button.textContent?.trim())
+    ).toEqual(['5%', '10%', '15%', '20%', '25%', '30%', '35%']);
+    fireEvent.click(within(maxUnlockGroup).getByRole('button', { name: '20%' }));
+    expect(getVisibleSymbols()).toEqual(['MINUSDT']);
+  });
+
+  it('resets the opposite unlock threshold when the selected range becomes invalid', async () => {
+    fetchBscAlphaTokensMock.mockResolvedValue(tokens);
+    renderHome();
+
+    await screen.findByRole('table');
+    const minUnlockGroup = screen.getByRole('group', { name: 'Filter by minimum unlock' });
+    const maxUnlockGroup = screen.getByRole('group', { name: 'Filter by maximum unlock' });
+
+    fireEvent.click(within(maxUnlockGroup).getByRole('button', { name: '20%' }));
+    expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
+
+    fireEvent.click(within(minUnlockGroup).getByRole('button', { name: '25%' }));
+    expect(within(minUnlockGroup).getByRole('button', { name: '25%' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(within(maxUnlockGroup).getByRole('button', { name: '35%' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(getVisibleSymbols()).toEqual(['BETAUSDT']);
+
+    fireEvent.click(within(maxUnlockGroup).getByRole('button', { name: '20%' }));
+    expect(within(minUnlockGroup).getByRole('button', { name: '0%' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(within(maxUnlockGroup).getByRole('button', { name: '20%' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
+  });
+
+  it('saves and restores total supply and unlock filters', async () => {
+    fetchBscAlphaTokensMock.mockResolvedValue(tokens);
+    const { unmount } = renderHome();
+
+    await screen.findByRole('table');
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Filter by total supply' })).getByRole('button', {
+        name: '1B'
+      })
+    );
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Filter by minimum unlock' })).getByRole('button', {
+        name: '15%'
+      })
+    );
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Filter by maximum unlock' })).getByRole('button', {
+        name: '30%'
+      })
+    );
+
+    const savedPreference = {
+      totalSupplyFilters: [1_000_000_000],
+      minUnlockFilter: 15,
+      maxUnlockFilter: 30
+    };
+    await waitFor(() => {
+      expect(window.localStorage.getItem(FILTER_PREFERENCE_STORAGE_KEY)).toBe(
+        JSON.stringify(savedPreference)
+      );
+    });
+
+    unmount();
+    renderHome();
+    await screen.findByRole('table');
+
+    expect(getVisibleSymbols()).toEqual(['ALPHAUSDT']);
+    expect(
+      within(screen.getByRole('group', { name: 'Filter by total supply' })).getByRole('button', {
+        name: '1B'
+      })
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      within(screen.getByRole('group', { name: 'Filter by minimum unlock' })).getByRole('button', {
+        name: '15%'
+      })
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      within(screen.getByRole('group', { name: 'Filter by maximum unlock' })).getByRole('button', {
+        name: '30%'
+      })
+    ).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('resets all filters and persists the default filter preferences', async () => {
+    fetchBscAlphaTokensMock.mockResolvedValue(tokens);
+    renderHome();
+
+    await screen.findByRole('table');
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Filter by total supply' })).getByRole('button', {
+        name: '1B'
+      })
+    );
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Filter by minimum unlock' })).getByRole('button', {
+        name: '15%'
+      })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }));
+
+    expect(getVisibleSymbols()).toEqual(['ALPHAUSDT', 'BETAUSDT']);
+    expect(
+      within(screen.getByRole('group', { name: 'Filter by total supply' })).getByRole('button', {
+        name: 'All'
+      })
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      within(screen.getByRole('group', { name: 'Filter by minimum unlock' })).getByRole('button', {
+        name: '0%'
+      })
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      within(screen.getByRole('group', { name: 'Filter by maximum unlock' })).getByRole('button', {
+        name: '35%'
+      })
+    ).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => {
+      expect(window.localStorage.getItem(FILTER_PREFERENCE_STORAGE_KEY)).toBe(
+        JSON.stringify({
+          totalSupplyFilters: [],
+          minUnlockFilter: 0,
+          maxUnlockFilter: 35
+        })
+      );
+    });
   });
 
   it('restores saved sorting and refreshes the API data', async () => {
