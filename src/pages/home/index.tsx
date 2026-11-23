@@ -7,6 +7,8 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Dialog,
+  DialogContent,
   Slider,
   Stack,
   Typography
@@ -14,10 +16,12 @@ import {
 import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
-  startTransition,
+  memo,
+  useCallback,
   useEffect,
   useMemo,
-  useState
+  useState,
+  useTransition
 } from 'react';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
@@ -30,6 +34,8 @@ import {
   type TokenTableSortDirection,
   type TokenTableSortField
 } from '@/components/organisms/token-table';
+
+const MemoizedTokenTable = memo(TokenTable);
 
 type SortPreference = {
   field: TokenTableSortField;
@@ -176,8 +182,14 @@ function TotalSupplyFilter({
   const selectedFilters = draft ?? value;
 
   function select(next: TotalSupplyFilter[]) {
+    if (
+      next.length === selectedFilters.length &&
+      next.every((supply) => selectedFilters.includes(supply))
+    ) {
+      return;
+    }
     setDraft(next);
-    startTransition(() => onChange(next));
+    onChange(next);
   }
 
   return (
@@ -341,6 +353,7 @@ export function HomePage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [sortPreference, setSortPreference] = useState(readSortPreference);
   const [filterPreference, setFilterPreference] = useState(readFilterPreference);
+  const [filterPending, startFilterTransition] = useTransition();
   const { isWatchlisted, toggleWatchlist } = useWatchlist();
   const [contextMenu, setContextMenu] = useState<TokenContextMenuState | null>(null);
   const { totalSupplyFilters, minUnlockFilter, maxUnlockFilter } = filterPreference;
@@ -439,15 +452,18 @@ export function HomePage() {
   );
 
   function resetFilters() {
-    setFilterPreference({ ...DEFAULT_FILTER_PREFERENCE });
+    startFilterTransition(() => setFilterPreference({ ...DEFAULT_FILTER_PREFERENCE }));
   }
 
-  function openTokenMenu(futuresSymbol: string, mouseX: number, mouseY: number) {
-    const token = sortedTokens.find((candidate) => candidate.futuresSymbol === futuresSymbol);
-    if (token) {
-      setContextMenu({ token, mouseX, mouseY });
-    }
-  }
+  const openTokenMenu = useCallback(
+    (futuresSymbol: string, mouseX: number, mouseY: number) => {
+      const token = sortedTokens.find((candidate) => candidate.futuresSymbol === futuresSymbol);
+      if (token) {
+        setContextMenu({ token, mouseX, mouseY });
+      }
+    },
+    [sortedTokens]
+  );
 
   function handleContextMenuOnOverlay(event: ReactMouseEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -487,13 +503,17 @@ export function HomePage() {
     }
   }
 
-  function handleSort(field: TokenTableSortField) {
+  const handleSort = useCallback((field: TokenTableSortField) => {
     setSortPreference((current) =>
       current.field === field
         ? { field, direction: current.direction === 'asc' ? 'desc' : 'asc' }
         : { field, direction: field === 'unlockedPercent' ? 'asc' : 'desc' }
     );
-  }
+  }, []);
+  const tableSort = useMemo(
+    () => ({ field: sortField, direction: sortDirection, onChange: handleSort }),
+    [sortField, sortDirection, handleSort]
+  );
 
   return (
     <Container maxWidth="lg" className="p-crypto-dashboard">
@@ -520,28 +540,32 @@ export function HomePage() {
             <Box className="p-crypto-dashboard__filters">
               <TotalSupplyFilter
                 value={totalSupplyFilters}
-                onChange={(value) =>
-                  setFilterPreference((current) => ({ ...current, totalSupplyFilters: value }))
-                }
+                onChange={(value) => {
+                  startFilterTransition(() => {
+                    setFilterPreference((current) => ({ ...current, totalSupplyFilters: value }));
+                  });
+                }}
               />
               <Box
                 role="group"
-                aria-label="Filter by unlock range"
+                aria-label="Filter by unlocked range"
                 className="p-crypto-dashboard__quick-filter p-crypto-dashboard__unlock-filter"
               >
-                <Typography className="p-crypto-dashboard__quick-filter-label">Unlock</Typography>
+                <Typography className="p-crypto-dashboard__quick-filter-label">Unlocked</Typography>
                 <Box className="p-crypto-dashboard__unlock-range">
                   <UnlockRangeSlider
                     minimum={minUnlockFilter}
                     maximum={maxUnlockFilter}
                     onChange={(minimum, maximum) => {
-                      startTransition(() => {
-                        setFilterPreference((current) => ({
-                          ...current,
-                          minUnlockFilter: minimum,
-                          maxUnlockFilter: maximum
-                        }));
-                      });
+                      if (minimum !== minUnlockFilter || maximum !== maxUnlockFilter) {
+                        startFilterTransition(() => {
+                          setFilterPreference((current) => ({
+                            ...current,
+                            minUnlockFilter: minimum,
+                            maxUnlockFilter: maximum
+                          }));
+                        });
+                      }
                     }}
                   />
                 </Box>
@@ -579,9 +603,6 @@ export function HomePage() {
                     Count unavailable
                   </Typography>
                 )}
-                {loading && tokens.length > 0 && (
-                  <CircularProgress size={20} aria-label="Refreshing token list" />
-                )}
               </Stack>
               <Box className="p-crypto-dashboard__list-actions">
                 <Button
@@ -596,7 +617,10 @@ export function HomePage() {
                 <Button
                   variant="outlined"
                   startIcon={<RefreshRoundedIcon />}
-                  onClick={() => setRefreshKey((key) => key + 1)}
+                  onClick={() => {
+                    setLoading(true);
+                    setRefreshKey((key) => key + 1);
+                  }}
                   disabled={loading}
                   className="p-crypto-dashboard__refresh"
                 >
@@ -623,13 +647,11 @@ export function HomePage() {
               </Box>
             ) : sortedTokens.length > 0 ? (
               <>
-                <TokenTableSortControl
-                  sort={{ field: sortField, direction: sortDirection, onChange: handleSort }}
-                />
-                <TokenTable
+                <TokenTableSortControl sort={tableSort} />
+                <MemoizedTokenTable
                   ariaLabel="Binance Alpha BSC tokens listed in futures but not spot, with unlock of 35 percent or less"
                   rows={tableRows}
-                  sort={{ field: sortField, direction: sortDirection, onChange: handleSort }}
+                  sort={tableSort}
                   onOpenMenu={openTokenMenu}
                 />
               </>
@@ -673,6 +695,25 @@ export function HomePage() {
             }}
             onContextMenuOverlay={handleContextMenuOnOverlay}
           />
+          {((refreshKey > 0 && loading) || filterPending) && (
+            <Dialog
+              open
+              slotProps={{
+                paper: {
+                  'aria-label':
+                    refreshKey > 0 && loading ? 'Refreshing tokens' : 'Filtering tokens',
+                  'aria-labelledby': undefined
+                }
+              }}
+            >
+              <DialogContent className="p-crypto-dashboard__loading-dialog">
+                <CircularProgress
+                  size={32}
+                  aria-label={refreshKey > 0 && loading ? 'Refreshing tokens' : 'Filtering tokens'}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </Stack>
       </Box>
     </Container>
