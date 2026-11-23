@@ -4,10 +4,10 @@ import { Link as RouterLink } from 'react-router-dom';
 
 export function HomePage() {
   return (
-    <Container maxWidth="lg" className="o-home-page">
-      <Box component="main" className="o-home-page__main">
+    <Container maxWidth="lg" className="p-home-page">
+      <Box component="main" className="p-home-page__main">
         <Stack spacing={4}>
-          <Box className="o-home-page__intro">
+          <Box className="p-home-page__intro">
             <Typography variant="overline" color="primary">
               CRYPTO DESK
             </Typography>
@@ -19,7 +19,7 @@ export function HomePage() {
             </Typography>
           </Box>
 
-          <Paper component="section" elevation={0} className="o-home-page__dashboard-card">
+          <Paper component="section" elevation={0} className="p-home-page__dashboard-card">
             <Box>
               <Typography variant="h2" sx={{ fontSize: 24 }}>
                 High-Risk Alpha Radar

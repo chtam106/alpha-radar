@@ -117,9 +117,9 @@ export function WatchlistPage() {
 
   function handleContextMenuOnOverlay(event: ReactMouseEvent<HTMLDivElement>) {
     event.preventDefault();
-    const paper = document.querySelector<HTMLElement>('.o-crypto-dashboard__context-menu');
+    const paper = document.querySelector<HTMLElement>('.p-crypto-dashboard__context-menu');
     const backdrop = document.querySelector<HTMLElement>(
-      '.o-crypto-dashboard__context-menu-backdrop'
+      '.p-crypto-dashboard__context-menu-backdrop'
     );
     const paperPointerEvents = paper?.style.pointerEvents;
     const backdropPointerEvents = backdrop?.style.pointerEvents;
@@ -161,15 +161,15 @@ export function WatchlistPage() {
   }
 
   return (
-    <Container maxWidth="lg" className="o-watchlist-page">
-      <Box component="main" className="o-watchlist-page__main">
+    <Container maxWidth="lg" className="p-watchlist-page">
+      <Box component="main" className="p-watchlist-page__main">
         <Stack spacing={3}>
-          <Box className="o-watchlist-page__heading">
+          <Box className="p-watchlist-page__heading">
             <Box>
               <Typography
                 variant="h1"
                 sx={{ mt: 0.5, fontSize: { xs: 34, sm: 46 } }}
-                className="o-watchlist-page__title"
+                className="p-watchlist-page__title"
               >
                 Watchlist
               </Typography>
@@ -182,7 +182,7 @@ export function WatchlistPage() {
               startIcon={<RefreshRoundedIcon />}
               onClick={() => setRefreshKey((key) => key + 1)}
               disabled={loading}
-              className="o-watchlist-page__refresh"
+              className="p-watchlist-page__refresh"
             >
               Refresh
             </Button>
@@ -191,12 +191,12 @@ export function WatchlistPage() {
           {error && <Alert severity={tokens.length > 0 ? 'warning' : 'error'}>{error}</Alert>}
 
           {loading && watchedTokens.length > 0 ? (
-            <Box className="o-watchlist-page__state">
+            <Box className="p-watchlist-page__state">
               <CircularProgress size={28} />
               <Typography color="text.secondary">Loading watchlist data…</Typography>
             </Box>
           ) : watchedTokens.length === 0 ? (
-            <Box className="o-watchlist-page__empty">
+            <Box className="p-watchlist-page__empty">
               <Typography variant="h6">Your watchlist is empty</Typography>
               <Typography color="text.secondary">
                 Add a coin from its chart page or by right-clicking it in the Alpha Radar.
@@ -204,27 +204,27 @@ export function WatchlistPage() {
               <Button
                 variant="outlined"
                 onClick={() => navigate('/alpha-radar')}
-                className="o-watchlist-page__browse-button"
+                className="p-watchlist-page__browse-button"
               >
                 Browse Alpha Radar
               </Button>
             </Box>
           ) : (
-            <Box className="o-watchlist-page__list-panel">
-              <TableContainer className="o-crypto-dashboard__table-wrap">
-                <Table aria-label="Saved futures watchlist" className="o-crypto-dashboard__table">
+            <Box className="p-watchlist-page__list-panel">
+              <TableContainer className="p-crypto-dashboard__table-wrap">
+                <Table aria-label="Saved futures watchlist" className="p-crypto-dashboard__table">
                   <colgroup>
-                    <col className="o-crypto-dashboard__index-col" />
+                    <col className="p-crypto-dashboard__index-col" />
                     <col span={6} />
-                    <col className="o-crypto-dashboard__target-fdv-col" />
-                    <col className="o-crypto-dashboard__target-fdv-col" />
+                    <col className="p-crypto-dashboard__target-fdv-col" />
+                    <col className="p-crypto-dashboard__target-fdv-col" />
                   </colgroup>
                   <TableHead>
                     <TableRow>
                       <TableCell
                         align="center"
                         rowSpan={2}
-                        className="o-crypto-dashboard__index-cell"
+                        className="p-crypto-dashboard__index-cell"
                       >
                         #
                       </TableCell>
@@ -249,10 +249,10 @@ export function WatchlistPage() {
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                      <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
                         Price
                       </TableCell>
-                      <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                      <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
                         MC
                       </TableCell>
                     </TableRow>
@@ -266,7 +266,7 @@ export function WatchlistPage() {
                         tabIndex={0}
                         aria-haspopup="menu"
                         aria-label={`Open ${symbol} chart; use the context menu to remove from watchlist`}
-                        className="o-crypto-dashboard__token-row"
+                        className="p-crypto-dashboard__token-row"
                         data-futures-symbol={symbol}
                         onClick={() => navigate(`/chart/${encodeURIComponent(symbol)}`)}
                         onContextMenu={(event) => {
@@ -300,7 +300,7 @@ export function WatchlistPage() {
                           }
                         }}
                       >
-                        <TableCell align="center" className="o-crypto-dashboard__index-cell">
+                        <TableCell align="center" className="p-crypto-dashboard__index-cell">
                           {index + 1}
                         </TableCell>
                         <TableCell>
@@ -309,7 +309,7 @@ export function WatchlistPage() {
                             spacing={1.5}
                             sx={{ alignItems: 'center', minWidth: 180 }}
                           >
-                            <Box component="span" className="o-crypto-dashboard__token-icon">
+                            <Box component="span" className="p-crypto-dashboard__token-icon">
                               {token?.iconUrl ? (
                                 <img
                                   src={token.iconUrl}
@@ -321,13 +321,13 @@ export function WatchlistPage() {
                               )}
                             </Box>
                             <Box>
-                              <Typography className="o-crypto-dashboard__token-symbol">
+                              <Typography className="p-crypto-dashboard__token-symbol">
                                 {token?.symbol ?? symbol.replace(/(?:USDT|USDC)$/, '')}
                               </Typography>
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
-                                className="o-crypto-dashboard__token-name"
+                                className="p-crypto-dashboard__token-name"
                               >
                                 {token?.name ?? 'Not currently in the Alpha Radar'}
                               </Typography>
@@ -337,18 +337,18 @@ export function WatchlistPage() {
                         <TableCell align="center">{formatPrice(token?.price ?? null)}</TableCell>
                         <TableCell align="center">{formatUsd(token?.marketCap ?? null)}</TableCell>
                         <TableCell align="center">{formatUsd(token?.fdv ?? null)}</TableCell>
-                        <TableCell align="center" className="o-crypto-dashboard__supply-data">
+                        <TableCell align="center" className="p-crypto-dashboard__supply-data">
                           {token ? formatSupply(token.totalSupply) : '—'}
                         </TableCell>
                         <TableCell align="center">
                           {token ? `${percentFormatter.format(token.unlockedPercent)}%` : '—'}
                         </TableCell>
-                        <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                        <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
                           {formatPrice(
                             token && token.totalSupply > 0 ? TARGET_FDV / token.totalSupply : null
                           )}
                         </TableCell>
-                        <TableCell align="center" className="o-crypto-dashboard__target-fdv-cell">
+                        <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
                           {formatUsd(
                             token && token.totalSupply > 0
                               ? (TARGET_FDV * token.circulatingSupply) / token.totalSupply
@@ -368,14 +368,14 @@ export function WatchlistPage() {
             anchorReference="anchorPosition"
             slotProps={{
               paper: {
-                className: 'o-crypto-dashboard__context-menu',
+                className: 'p-crypto-dashboard__context-menu',
                 onContextMenu: handleContextMenuOnOverlay
               },
               backdrop: {
-                className: 'o-crypto-dashboard__context-menu-backdrop',
+                className: 'p-crypto-dashboard__context-menu-backdrop',
                 onContextMenu: handleContextMenuOnOverlay
               },
-              list: { className: 'o-crypto-dashboard__context-menu-list' }
+              list: { className: 'p-crypto-dashboard__context-menu-list' }
             }}
             anchorPosition={
               contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined
@@ -383,98 +383,98 @@ export function WatchlistPage() {
           >
             {contextMenu && (
               <>
-                <Box className="o-crypto-dashboard__context-menu-heading">
-                  <Typography className="o-crypto-dashboard__context-menu-label">Token</Typography>
-                  <Typography className="o-crypto-dashboard__context-menu-symbol">
+                <Box className="p-crypto-dashboard__context-menu-heading">
+                  <Typography className="p-crypto-dashboard__context-menu-label">Token</Typography>
+                  <Typography className="p-crypto-dashboard__context-menu-symbol">
                     {contextMenu.symbol}
                   </Typography>
                 </Box>
                 <MenuItem
-                  className="o-crypto-dashboard__context-menu-item"
+                  className="p-crypto-dashboard__context-menu-item"
                   onClick={() => {
                     toggleWatchlist(contextMenu.symbol);
                     setContextMenu(null);
                   }}
                 >
-                  <Box component="span" className="o-crypto-dashboard__context-menu-icon-wrap">
-                    <StarRoundedIcon className="o-crypto-dashboard__context-menu-icon" />
+                  <Box component="span" className="p-crypto-dashboard__context-menu-icon-wrap">
+                    <StarRoundedIcon className="p-crypto-dashboard__context-menu-icon" />
                   </Box>
-                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
                     Remove from watchlist
                   </Typography>
                 </MenuItem>
-                <Box className="o-crypto-dashboard__context-menu-section">Quick links</Box>
+                <Box className="p-crypto-dashboard__context-menu-section">Quick links</Box>
                 <MenuItem
                   component="a"
                   href={`https://www.binance.com/en/futures/${encodeURIComponent(contextMenu.symbol)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="o-crypto-dashboard__context-menu-item"
+                  className="p-crypto-dashboard__context-menu-item"
                   onClick={() => setContextMenu(null)}
                 >
                   <Box
                     component="span"
-                    className="o-crypto-dashboard__context-menu-icon-wrap o-crypto-dashboard__context-menu-link-icon-wrap"
+                    className="p-crypto-dashboard__context-menu-icon-wrap p-crypto-dashboard__context-menu-link-icon-wrap"
                   >
                     <Box
                       component="img"
                       src="https://bin.bnbstatic.com/static/images/common/favicon.ico"
                       alt=""
-                      className="o-crypto-dashboard__context-menu-link-logo"
+                      className="p-crypto-dashboard__context-menu-link-logo"
                     />
                   </Box>
-                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
                     Binance Futures
                   </Typography>
-                  <OpenInNewRoundedIcon className="o-crypto-dashboard__context-menu-external-icon" />
+                  <OpenInNewRoundedIcon className="p-crypto-dashboard__context-menu-external-icon" />
                 </MenuItem>
                 <MenuItem
                   component="a"
                   href={`https://www.coinglass.com/tv/Binance_${encodeURIComponent(contextMenu.symbol)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="o-crypto-dashboard__context-menu-item"
+                  className="p-crypto-dashboard__context-menu-item"
                   onClick={() => setContextMenu(null)}
                 >
                   <Box
                     component="span"
-                    className="o-crypto-dashboard__context-menu-icon-wrap o-crypto-dashboard__context-menu-link-icon-wrap"
+                    className="p-crypto-dashboard__context-menu-icon-wrap p-crypto-dashboard__context-menu-link-icon-wrap"
                   >
                     <Box
                       component="img"
                       src="https://cdn.coinglasscdn.com/static/icon_200.png"
                       alt=""
-                      className="o-crypto-dashboard__context-menu-link-logo"
+                      className="p-crypto-dashboard__context-menu-link-logo"
                     />
                   </Box>
-                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
                     CoinGlass
                   </Typography>
-                  <OpenInNewRoundedIcon className="o-crypto-dashboard__context-menu-external-icon" />
+                  <OpenInNewRoundedIcon className="p-crypto-dashboard__context-menu-external-icon" />
                 </MenuItem>
                 <MenuItem
                   component="a"
                   href={contextMenu.coinMarketCapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="o-crypto-dashboard__context-menu-item"
+                  className="p-crypto-dashboard__context-menu-item"
                   onClick={() => setContextMenu(null)}
                 >
                   <Box
                     component="span"
-                    className="o-crypto-dashboard__context-menu-icon-wrap o-crypto-dashboard__context-menu-link-icon-wrap"
+                    className="p-crypto-dashboard__context-menu-icon-wrap p-crypto-dashboard__context-menu-link-icon-wrap"
                   >
                     <Box
                       component="img"
                       src="https://coinmarketcap.com/favicon.ico"
                       alt=""
-                      className="o-crypto-dashboard__context-menu-link-logo"
+                      className="p-crypto-dashboard__context-menu-link-logo"
                     />
                   </Box>
-                  <Typography component="span" className="o-crypto-dashboard__context-menu-action">
+                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
                     CoinMarketCap
                   </Typography>
-                  <OpenInNewRoundedIcon className="o-crypto-dashboard__context-menu-external-icon" />
+                  <OpenInNewRoundedIcon className="p-crypto-dashboard__context-menu-external-icon" />
                 </MenuItem>
               </>
             )}
