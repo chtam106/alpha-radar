@@ -212,7 +212,7 @@
 
     &__list-status {
       align-items: flex-start;
-      flex-direction: column-reverse;
+      flex-direction: column;
     }
 
     &__list-status-meta {
@@ -222,7 +222,18 @@
     }
 
     &__list-actions {
+      width: 100%;
       margin-left: 0;
+    }
+
+    &__reset-filters,
+    &__refresh {
+      min-width: 0;
+      flex: 1 1 0;
+    }
+
+    &__list-panel > .m-token-table__sort-controls {
+      padding-top: 16px;
     }
 
     &__alert {
