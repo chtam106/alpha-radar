@@ -1,58 +1,12 @@
-import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
-import StarRoundedIcon from '@mui/icons-material/StarRounded';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  Menu,
-  MenuItem,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography
-} from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Container, Stack, Typography } from '@mui/material';
 import { type MouseEvent as ReactMouseEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { TokenContextMenu } from '@/components/molecules/token-context-menu';
+import { TokenTable, type TokenTableRowData } from '@/components/organisms/token-table';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
 import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
-
-const usdFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  notation: 'compact',
-  maximumFractionDigits: 2
-});
-const priceFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumSignificantDigits: 6
-});
-const percentFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
-const supplyFormatter = new Intl.NumberFormat('en-US', {
-  notation: 'compact',
-  maximumFractionDigits: 2
-});
-const TARGET_FDV = 27_500_000_000;
-
-function formatUsd(value: number | null): string {
-  return value === null ? '—' : usdFormatter.format(value);
-}
-
-function formatPrice(value: number | null): string {
-  return value === null ? '—' : priceFormatter.format(value);
-}
-
-function formatSupply(value: number): string {
-  return supplyFormatter.format(value);
-}
 
 function getWatchedTokenCoinMarketCapUrl(
   futuresSymbol: string,
@@ -71,6 +25,7 @@ export function WatchlistPage() {
   const { watchlist, toggleWatchlist } = useWatchlist();
   const [contextMenu, setContextMenu] = useState<{
     symbol: string;
+    tokenName: string;
     coinMarketCapUrl: string;
     mouseX: number;
     mouseY: number;
@@ -114,13 +69,39 @@ export function WatchlistPage() {
     () => watchlist.map((symbol) => ({ symbol, token: tokensBySymbol.get(symbol) ?? null })),
     [tokensBySymbol, watchlist]
   );
+  const tableRows = useMemo<TokenTableRowData[]>(
+    () =>
+      watchedTokens.map(({ symbol, token }) => ({
+        id: symbol,
+        futuresSymbol: symbol,
+        symbol: token?.symbol ?? symbol.replace(/(?:USDT|USDC)$/, ''),
+        name: token?.name ?? 'Not currently in the Alpha Radar',
+        iconUrl: token?.iconUrl ?? null,
+        price: token?.price ?? null,
+        marketCap: token?.marketCap ?? null,
+        fdv: token?.fdv ?? null,
+        totalSupply: token?.totalSupply ?? null,
+        unlockedPercent: token?.unlockedPercent ?? null,
+        circulatingSupply: token?.circulatingSupply ?? null
+      })),
+    [watchedTokens]
+  );
+
+  function openTokenMenu(symbol: string, mouseX: number, mouseY: number) {
+    const token = tokensBySymbol.get(symbol.toUpperCase()) ?? null;
+    setContextMenu({
+      symbol,
+      tokenName: token?.name ?? symbol.replace(/(?:USDT|USDC)$/, ''),
+      coinMarketCapUrl: getWatchedTokenCoinMarketCapUrl(symbol, token),
+      mouseX,
+      mouseY
+    });
+  }
 
   function handleContextMenuOnOverlay(event: ReactMouseEvent<HTMLDivElement>) {
     event.preventDefault();
-    const paper = document.querySelector<HTMLElement>('.p-crypto-dashboard__context-menu');
-    const backdrop = document.querySelector<HTMLElement>(
-      '.p-crypto-dashboard__context-menu-backdrop'
-    );
+    const paper = document.querySelector<HTMLElement>('.m-token-context-menu__paper');
+    const backdrop = document.querySelector<HTMLElement>('.m-token-context-menu__backdrop');
     const paperPointerEvents = paper?.style.pointerEvents;
     const backdropPointerEvents = backdrop?.style.pointerEvents;
     const row = (() => {
@@ -149,12 +130,7 @@ export function WatchlistPage() {
     const symbol = row?.dataset.futuresSymbol;
     const watchedToken = watchedTokens.find((candidate) => candidate.symbol === symbol);
     if (watchedToken && watchedToken.symbol !== contextMenu?.symbol) {
-      setContextMenu({
-        symbol: watchedToken.symbol,
-        coinMarketCapUrl: getWatchedTokenCoinMarketCapUrl(watchedToken.symbol, watchedToken.token),
-        mouseX: event.clientX,
-        mouseY: event.clientY
-      });
+      openTokenMenu(watchedToken.symbol, event.clientX, event.clientY);
     } else if (!watchedToken) {
       setContextMenu(null);
     }
@@ -211,274 +187,35 @@ export function WatchlistPage() {
             </Box>
           ) : (
             <Box className="p-watchlist-page__list-panel">
-              <TableContainer className="p-crypto-dashboard__table-wrap">
-                <Table aria-label="Saved futures watchlist" className="p-crypto-dashboard__table">
-                  <colgroup>
-                    <col className="p-crypto-dashboard__index-col" />
-                    <col span={6} />
-                    <col className="p-crypto-dashboard__target-fdv-col" />
-                    <col className="p-crypto-dashboard__target-fdv-col" />
-                  </colgroup>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell
-                        align="center"
-                        rowSpan={2}
-                        className="p-crypto-dashboard__index-cell"
-                      >
-                        #
-                      </TableCell>
-                      <TableCell rowSpan={2}>Coin</TableCell>
-                      <TableCell align="center" rowSpan={2}>
-                        Price
-                      </TableCell>
-                      <TableCell align="center" rowSpan={2}>
-                        Market cap
-                      </TableCell>
-                      <TableCell align="center" rowSpan={2}>
-                        FDV
-                      </TableCell>
-                      <TableCell align="center" rowSpan={2}>
-                        Total Supply
-                      </TableCell>
-                      <TableCell align="center" rowSpan={2}>
-                        Unlocked
-                      </TableCell>
-                      <TableCell align="center" colSpan={2}>
-                        @ $27.5B FDV
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
-                        Price
-                      </TableCell>
-                      <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
-                        MC
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {watchedTokens.map(({ symbol, token }, index) => (
-                      <TableRow
-                        key={symbol}
-                        hover
-                        role="row"
-                        tabIndex={0}
-                        aria-haspopup="menu"
-                        aria-label={`Open ${symbol} chart; use the context menu to remove from watchlist`}
-                        className="p-crypto-dashboard__token-row"
-                        data-futures-symbol={symbol}
-                        onClick={() => navigate(`/chart/${encodeURIComponent(symbol)}`)}
-                        onContextMenu={(event) => {
-                          event.preventDefault();
-                          setContextMenu({
-                            symbol,
-                            coinMarketCapUrl: getWatchedTokenCoinMarketCapUrl(symbol, token),
-                            mouseX: event.clientX,
-                            mouseY: event.clientY
-                          });
-                        }}
-                        onKeyDown={(event) => {
-                          if (
-                            (event.shiftKey && event.key === 'F10') ||
-                            event.key === 'ContextMenu'
-                          ) {
-                            event.preventDefault();
-                            const bounds = event.currentTarget.getBoundingClientRect();
-                            setContextMenu({
-                              symbol,
-                              coinMarketCapUrl: getWatchedTokenCoinMarketCapUrl(symbol, token),
-                              mouseX: bounds.left,
-                              mouseY: bounds.bottom
-                            });
-                            return;
-                          }
-
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            navigate(`/chart/${encodeURIComponent(symbol)}`);
-                          }
-                        }}
-                      >
-                        <TableCell align="center" className="p-crypto-dashboard__index-cell">
-                          {index + 1}
-                        </TableCell>
-                        <TableCell>
-                          <Stack
-                            direction="row"
-                            spacing={1.5}
-                            sx={{ alignItems: 'center', minWidth: 180 }}
-                          >
-                            <Box component="span" className="p-crypto-dashboard__token-icon">
-                              {token?.iconUrl ? (
-                                <img
-                                  src={token.iconUrl}
-                                  alt={token.symbol}
-                                  referrerPolicy="no-referrer"
-                                />
-                              ) : (
-                                symbol.slice(0, 1)
-                              )}
-                            </Box>
-                            <Box>
-                              <Typography className="p-crypto-dashboard__token-symbol">
-                                {token?.symbol ?? symbol.replace(/(?:USDT|USDC)$/, '')}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                className="p-crypto-dashboard__token-name"
-                              >
-                                {token?.name ?? 'Not currently in the Alpha Radar'}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                        </TableCell>
-                        <TableCell align="center">{formatPrice(token?.price ?? null)}</TableCell>
-                        <TableCell align="center">{formatUsd(token?.marketCap ?? null)}</TableCell>
-                        <TableCell align="center">{formatUsd(token?.fdv ?? null)}</TableCell>
-                        <TableCell align="center" className="p-crypto-dashboard__supply-data">
-                          {token ? formatSupply(token.totalSupply) : '—'}
-                        </TableCell>
-                        <TableCell align="center">
-                          {token ? `${percentFormatter.format(token.unlockedPercent)}%` : '—'}
-                        </TableCell>
-                        <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
-                          {formatPrice(
-                            token && token.totalSupply > 0 ? TARGET_FDV / token.totalSupply : null
-                          )}
-                        </TableCell>
-                        <TableCell align="center" className="p-crypto-dashboard__target-fdv-cell">
-                          {formatUsd(
-                            token && token.totalSupply > 0
-                              ? (TARGET_FDV * token.circulatingSupply) / token.totalSupply
-                              : null
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <TokenTable
+                ariaLabel="Saved futures watchlist"
+                rows={tableRows}
+                onOpenMenu={openTokenMenu}
+              />
             </Box>
           )}
-          <Menu
-            open={contextMenu !== null}
-            onClose={() => setContextMenu(null)}
-            anchorReference="anchorPosition"
-            slotProps={{
-              paper: {
-                className: 'p-crypto-dashboard__context-menu',
-                onContextMenu: handleContextMenuOnOverlay
-              },
-              backdrop: {
-                className: 'p-crypto-dashboard__context-menu-backdrop',
-                onContextMenu: handleContextMenuOnOverlay
-              },
-              list: { className: 'p-crypto-dashboard__context-menu-list' }
-            }}
-            anchorPosition={
-              contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined
+          <TokenContextMenu
+            token={
+              contextMenu
+                ? {
+                    name: contextMenu.tokenName,
+                    futuresSymbol: contextMenu.symbol,
+                    coinMarketCapUrl: contextMenu.coinMarketCapUrl,
+                    isWatchlisted: true
+                  }
+                : null
             }
-          >
-            {contextMenu && (
-              <>
-                <Box className="p-crypto-dashboard__context-menu-heading">
-                  <Typography className="p-crypto-dashboard__context-menu-label">Token</Typography>
-                  <Typography className="p-crypto-dashboard__context-menu-symbol">
-                    {contextMenu.symbol}
-                  </Typography>
-                </Box>
-                <MenuItem
-                  className="p-crypto-dashboard__context-menu-item"
-                  onClick={() => {
-                    toggleWatchlist(contextMenu.symbol);
-                    setContextMenu(null);
-                  }}
-                >
-                  <Box component="span" className="p-crypto-dashboard__context-menu-icon-wrap">
-                    <StarRoundedIcon className="p-crypto-dashboard__context-menu-icon" />
-                  </Box>
-                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
-                    Remove from watchlist
-                  </Typography>
-                </MenuItem>
-                <Box className="p-crypto-dashboard__context-menu-section">Quick links</Box>
-                <MenuItem
-                  component="a"
-                  href={`https://www.binance.com/en/futures/${encodeURIComponent(contextMenu.symbol)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-crypto-dashboard__context-menu-item"
-                  onClick={() => setContextMenu(null)}
-                >
-                  <Box
-                    component="span"
-                    className="p-crypto-dashboard__context-menu-icon-wrap p-crypto-dashboard__context-menu-link-icon-wrap"
-                  >
-                    <Box
-                      component="img"
-                      src="https://bin.bnbstatic.com/static/images/common/favicon.ico"
-                      alt=""
-                      className="p-crypto-dashboard__context-menu-link-logo"
-                    />
-                  </Box>
-                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
-                    Binance Futures
-                  </Typography>
-                  <OpenInNewRoundedIcon className="p-crypto-dashboard__context-menu-external-icon" />
-                </MenuItem>
-                <MenuItem
-                  component="a"
-                  href={`https://www.coinglass.com/tv/Binance_${encodeURIComponent(contextMenu.symbol)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-crypto-dashboard__context-menu-item"
-                  onClick={() => setContextMenu(null)}
-                >
-                  <Box
-                    component="span"
-                    className="p-crypto-dashboard__context-menu-icon-wrap p-crypto-dashboard__context-menu-link-icon-wrap"
-                  >
-                    <Box
-                      component="img"
-                      src="https://cdn.coinglasscdn.com/static/icon_200.png"
-                      alt=""
-                      className="p-crypto-dashboard__context-menu-link-logo"
-                    />
-                  </Box>
-                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
-                    CoinGlass
-                  </Typography>
-                  <OpenInNewRoundedIcon className="p-crypto-dashboard__context-menu-external-icon" />
-                </MenuItem>
-                <MenuItem
-                  component="a"
-                  href={contextMenu.coinMarketCapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-crypto-dashboard__context-menu-item"
-                  onClick={() => setContextMenu(null)}
-                >
-                  <Box
-                    component="span"
-                    className="p-crypto-dashboard__context-menu-icon-wrap p-crypto-dashboard__context-menu-link-icon-wrap"
-                  >
-                    <Box
-                      component="img"
-                      src="https://coinmarketcap.com/favicon.ico"
-                      alt=""
-                      className="p-crypto-dashboard__context-menu-link-logo"
-                    />
-                  </Box>
-                  <Typography component="span" className="p-crypto-dashboard__context-menu-action">
-                    CoinMarketCap
-                  </Typography>
-                  <OpenInNewRoundedIcon className="p-crypto-dashboard__context-menu-external-icon" />
-                </MenuItem>
-              </>
-            )}
-          </Menu>
+            anchorPosition={
+              contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : null
+            }
+            onClose={() => setContextMenu(null)}
+            onToggleWatchlist={() => {
+              if (contextMenu) {
+                toggleWatchlist(contextMenu.symbol);
+              }
+            }}
+            onContextMenuOverlay={handleContextMenuOnOverlay}
+          />
         </Stack>
       </Box>
     </Container>
