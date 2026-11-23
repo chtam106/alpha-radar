@@ -67,9 +67,9 @@ export function ScrollToEdgeButton() {
         title={scrollDirection === 'up' ? 'Scroll to top' : 'Scroll to bottom'}
       >
         {scrollDirection === 'up' ? (
-          <KeyboardArrowUpRoundedIcon />
+          <KeyboardArrowUpRoundedIcon className="a-scroll-to-edge-button__icon--up" />
         ) : (
-          <KeyboardArrowDownRoundedIcon />
+          <KeyboardArrowDownRoundedIcon className="a-scroll-to-edge-button__icon--down" />
         )}
       </Fab>
     </Box>
