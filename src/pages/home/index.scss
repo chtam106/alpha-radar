@@ -233,6 +233,10 @@
       min-width: 0;
     }
 
+    &__refresh {
+      order: -1;
+    }
+
     &__list-panel > .m-token-table__sort-controls {
       padding-top: 16px;
     }
