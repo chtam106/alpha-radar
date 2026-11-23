@@ -243,14 +243,14 @@ function getListedFuturesSymbols(payload: unknown): Map<string, string> {
       value.status !== 'TRADING' ||
       typeof value.baseAsset !== 'string' ||
       typeof value.symbol !== 'string' ||
-      typeof value.quoteAsset !== 'string'
+      (value.quoteAsset !== 'USDT' && value.quoteAsset !== 'USDC')
     ) {
       continue;
     }
 
     const baseAsset = value.baseAsset.toUpperCase();
     const pairs = pairsByAsset.get(baseAsset) ?? [];
-    pairs.push({ symbol: value.symbol, quoteAsset: value.quoteAsset.toUpperCase() });
+    pairs.push({ symbol: value.symbol, quoteAsset: value.quoteAsset });
     pairsByAsset.set(baseAsset, pairs);
   }
 

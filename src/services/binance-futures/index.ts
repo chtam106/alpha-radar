@@ -148,14 +148,6 @@ async function loadBinanceFuturesExchangeInfo(): Promise<BinanceFuturesExchangeI
       continue;
     }
 
-    if (
-      value.status === 'TRADING' &&
-      value.contractType === 'PERPETUAL' &&
-      (value.quoteAsset === 'USDT' || value.quoteAsset === 'USDC')
-    ) {
-      perpetualSymbols.push(value.symbol.toUpperCase());
-    }
-
     const priceFilter = value.filters.find(
       (filter) => isRecord(filter) && filter.filterType === 'PRICE_FILTER'
     );
@@ -172,6 +164,13 @@ async function loadBinanceFuturesExchangeInfo(): Promise<BinanceFuturesExchangeI
       precision: getPricePrecision(priceFilter.tickSize),
       minMove
     });
+    if (
+      value.status === 'TRADING' &&
+      value.contractType === 'PERPETUAL' &&
+      (value.quoteAsset === 'USDT' || value.quoteAsset === 'USDC')
+    ) {
+      perpetualSymbols.push(value.symbol.toUpperCase());
+    }
   }
 
   return { priceFormats, perpetualSymbols: perpetualSymbols.sort() };

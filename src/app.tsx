@@ -21,7 +21,7 @@ const WatchlistPage = lazy(() =>
   }))
 );
 
-function AppRoutes() {
+export function AppRoutes() {
   const { pathname } = useLocation();
   const chartSymbol = pathname.startsWith('/chart/') ? pathname.slice('/chart/'.length) : null;
 
