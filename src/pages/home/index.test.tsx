@@ -76,9 +76,12 @@ function getVisibleSymbols(): string[] {
 }
 
 async function waitForFiltering() {
-  await waitFor(() =>
-    expect(screen.queryByRole('dialog', { name: 'Filtering tokens' })).toBeNull()
-  );
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog', { name: 'Filtering tokens' })).toBeNull();
+    // MUI removes the dialog from the DOM before its effect cleanup releases the
+    // modal's aria-hidden/scroll lock on the page, so wait for that as well.
+    expect(document.querySelector('body > [aria-hidden="true"]')).toBeNull();
+  });
 }
 
 describe('Home page', () => {
