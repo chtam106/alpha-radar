@@ -7,7 +7,7 @@
     "dev": "vite",
     "storybook": "cross-env NAPI_RS_FORCE_WASI=true storybook dev -p 6006",
     "build-storybook": "cross-env NAPI_RS_FORCE_WASI=true storybook build",
-    "build": "tsc -b && tsc --noEmit -p tsconfig.test.json && vite build",
+    "build": "pnpm run typecheck && vite build",
     "typecheck": "tsc -b && tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
     "test:watch": "vitest",
