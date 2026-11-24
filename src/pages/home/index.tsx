@@ -308,6 +308,7 @@ function UnlockRangeSlider({
         min={0}
         max={35}
         step={0.1}
+        track={false}
         marks={[...MIN_UNLOCK_FILTERS, DEFAULT_UNLOCK_FILTER].map((value) => ({
           value,
           label: (
