@@ -1,9 +1,11 @@
 import { createTheme } from '@mui/material';
 
+const primaryColor = '#f0b90b';
+
 export const appTheme = createTheme({
   palette: {
     mode: 'dark',
-    primary: { main: '#f0b90b', contrastText: '#0b0e11' },
+    primary: { main: primaryColor, contrastText: '#0b0e11' },
     background: { default: '#0b0e11', paper: '#181a20' },
     text: { primary: '#f2f5f7', secondary: '#9ba8b5' }
   },
@@ -23,11 +25,30 @@ export const appTheme = createTheme({
   components: {
     MuiButton: {
       styleOverrides: {
-        root: { fontSize: '1rem' }
+        root: {
+          fontSize: '1rem',
+          '&.MuiButton-containedPrimary:hover, &.MuiButton-containedPrimary.Mui-focusVisible': {
+            backgroundColor: primaryColor
+          },
+          '&.MuiButton-containedPrimary.Mui-focusVisible': {
+            outline: `2px solid ${primaryColor}`,
+            outlineOffset: 2
+          }
+        }
       }
     },
     MuiChip: {
       styleOverrides: {
+        root: {
+          '&.MuiChip-clickable.MuiChip-colorPrimary:hover, &.MuiChip-clickable.MuiChip-colorPrimary.Mui-focusVisible':
+            {
+              backgroundColor: primaryColor
+            },
+          '&.MuiChip-clickable.MuiChip-colorPrimary.Mui-focusVisible': {
+            outline: `2px solid ${primaryColor}`,
+            outlineOffset: 2
+          }
+        },
         sizeSmall: { height: 32 },
         label: { fontSize: '1rem' }
       }
