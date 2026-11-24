@@ -360,12 +360,14 @@ describe('Home page', () => {
     expect(unlockGroup.getByText('0%')).toHaveClass(selectedClass);
     expect(unlockGroup.getByText('35%')).toHaveClass(selectedClass);
     expect(unlockGroup.getByText('5%')).not.toHaveClass(selectedClass);
+    expect(unlockGroup.getByText('10%').parentElement).not.toHaveClass('MuiSlider-markLabelActive');
 
     fireEvent.keyDown(screen.getByRole('slider', { name: 'Minimum unlock' }), {
       key: 'ArrowRight'
     });
     expect(unlockGroup.getByText('0%')).not.toHaveClass(selectedClass);
     expect(unlockGroup.getByText('5%')).toHaveClass(selectedClass);
+    expect(unlockGroup.getByText('10%').parentElement).not.toHaveClass('MuiSlider-markLabelActive');
   });
 
   it('saves and restores total supply and unlock filters', async () => {
