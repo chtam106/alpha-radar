@@ -13,6 +13,9 @@ vi.mock('@/pages/chart', () => ({ CoinChartPage: () => <div>chart page test cont
 vi.mock('@/pages/watchlist', () => ({
   WatchlistPage: () => <div>watchlist page test content</div>
 }));
+vi.mock('@/pages/hidden', () => ({
+  HiddenCoinsPage: () => <div>hidden coins page test content</div>
+}));
 
 import { AppRoutes } from './app';
 

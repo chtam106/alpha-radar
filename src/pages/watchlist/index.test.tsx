@@ -57,6 +57,7 @@ describe('Watchlist page', () => {
     });
     const menu = await screen.findByRole('menu');
     expect(within(menu).getByText('ALPHA')).toBeInTheDocument();
+    expect(within(menu).queryByRole('menuitem', { name: 'Hide from home' })).not.toBeInTheDocument();
     expect(menu.querySelector('.m-token-context-menu__token-icon img')).toHaveAttribute(
       'src',
       'https://example.com/alpha.png'
@@ -93,6 +94,36 @@ describe('Watchlist page', () => {
       within(screen.getByRole('table', { name: 'Saved futures watchlist' })).getByText('ALPHA')
     ).toBeInTheDocument();
     expect(window.localStorage.getItem('crypto-dashboard:watchlist')).toBe('["ALPHAUSDT"]');
+  });
+
+  it('confirms before removing all watchlist coins', async () => {
+    window.localStorage.setItem('crypto-dashboard:watchlist', '["ALPHAUSDT"]');
+    fetchBscAlphaTokensMock.mockResolvedValue([alphaToken]);
+    renderWatchlist();
+
+    await screen.findByRole('table', { name: 'Saved futures watchlist' });
+    fireEvent.click(screen.getByRole('button', { name: 'Remove all' }));
+    const confirmation = screen.getByRole('dialog', {
+      name: 'Remove all coins from your watchlist?'
+    });
+    fireEvent.click(within(confirmation).getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(window.localStorage.getItem('crypto-dashboard:watchlist')).toBe('["ALPHAUSDT"]');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove all' }));
+    fireEvent.click(
+      within(
+        screen.getByRole('dialog', { name: 'Remove all coins from your watchlist?' })
+      ).getByRole('button', { name: 'Remove all' })
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Watchlist cleared' })).toBeVisible();
+    expect(window.localStorage.getItem('crypto-dashboard:watchlist')).toBe('[]');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
+      timeout: 2500
+    });
+    expect(await screen.findByText('Your watchlist is empty')).toBeInTheDocument();
   });
 
   it('explains how to add a coin when the watchlist is empty', async () => {

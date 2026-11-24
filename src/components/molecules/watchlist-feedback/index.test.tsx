@@ -30,4 +30,15 @@ describe('WatchlistFeedback', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to save the watchlist');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+
+  it('labels bulk-clear confirmations for the relevant list', () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <WatchlistFeedback feedback="cleared" onClose={onClose} context="watchlist" />
+    );
+    expect(screen.getByRole('dialog', { name: 'Watchlist cleared' })).toBeVisible();
+
+    rerender(<WatchlistFeedback feedback="cleared" onClose={onClose} context="home" />);
+    expect(screen.getByRole('dialog', { name: 'All coins restored to Home' })).toBeVisible();
+  });
 });

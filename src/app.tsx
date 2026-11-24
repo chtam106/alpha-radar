@@ -21,6 +21,11 @@ const WatchlistPage = lazy(() =>
     default: Page
   }))
 );
+const HiddenCoinsPage = lazy(() =>
+  import('@/pages/hidden').then(({ HiddenCoinsPage: Page }) => ({
+    default: Page
+  }))
+);
 
 export function AppRoutes() {
   const { pathname } = useLocation();
@@ -32,7 +37,9 @@ export function AppRoutes() {
       ? `${chartSymbol.toUpperCase()} | Binance Futures`
       : pathname === '/watchlist'
         ? 'Watchlist | Alpha Radar'
-        : 'Alpha Radar | Binance Alpha BSC Futures';
+        : pathname === '/hidden'
+          ? 'Hidden coins | Alpha Radar'
+          : 'Alpha Radar | Binance Alpha BSC Futures';
   }, [chartSymbol, pathname]);
 
   return (
@@ -70,6 +77,20 @@ export function AppRoutes() {
               }
             >
               <WatchlistPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/hidden"
+          element={
+            <Suspense
+              fallback={
+                <Box className="o-app-shell__route-loading">
+                  <CircularProgress aria-label="Loading hidden coins" />
+                </Box>
+              }
+            >
+              <HiddenCoinsPage />
             </Suspense>
           }
         />

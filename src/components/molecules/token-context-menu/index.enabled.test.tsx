@@ -21,11 +21,13 @@ describe('TokenContextMenu with the chart flag enabled', () => {
             iconUrl: null,
             futuresSymbol: 'ALPHA/USDT',
             coinMarketCapUrl: 'https://coinmarketcap.com/currencies/alpha-token/',
-            isWatchlisted: false
+            isWatchlisted: false,
+            isHidden: false
           }}
           anchorPosition={{ top: 100, left: 100 }}
           onClose={vi.fn()}
           onToggleWatchlist={vi.fn()}
+          onToggleHidden={vi.fn()}
           onContextMenuOverlay={vi.fn()}
         />
         <CurrentPath />

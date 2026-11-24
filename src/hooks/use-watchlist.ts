@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 const WATCHLIST_STORAGE_KEY = 'crypto-dashboard:watchlist';
 
-export type WatchlistFeedback = 'added' | 'removed' | 'error' | null;
+export type WatchlistFeedback = 'added' | 'removed' | 'cleared' | 'error' | null;
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((symbol: unknown) => typeof symbol === 'string');
@@ -95,7 +95,22 @@ export function useWatchlist() {
     setWatchlist(nextWatchlist);
     setFeedback(removing ? 'removed' : 'added');
   }, []);
+  const clearWatchlist = useCallback(() => {
+    if (watchlistRef.current.length === 0) return;
+
+    try {
+      window.localStorage.setItem(WATCHLIST_STORAGE_KEY, '[]');
+    } catch (error) {
+      console.error('Unable to save the watchlist.', error);
+      setFeedback('error');
+      return;
+    }
+
+    watchlistRef.current = [];
+    setWatchlist([]);
+    setFeedback('cleared');
+  }, []);
   const clearFeedback = useCallback(() => setFeedback(null), []);
 
-  return { watchlist, isWatchlisted, toggleWatchlist, feedback, clearFeedback };
+  return { watchlist, isWatchlisted, toggleWatchlist, clearWatchlist, feedback, clearFeedback };
 }
