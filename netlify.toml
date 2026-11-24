@@ -1,3 +1,0 @@
-[build]
-  command = "if command -v pnpm >/dev/null 2>&1; then pnpm run build; else npm run build; fi"
-  publish = "dist"
