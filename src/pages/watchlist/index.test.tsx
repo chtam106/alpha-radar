@@ -57,7 +57,9 @@ describe('Watchlist page', () => {
     });
     const menu = await screen.findByRole('menu');
     expect(within(menu).getByText('ALPHA')).toBeInTheDocument();
-    expect(within(menu).queryByRole('menuitem', { name: 'Hide from home' })).not.toBeInTheDocument();
+    expect(
+      within(menu).queryByRole('menuitem', { name: 'Hide from home' })
+    ).not.toBeInTheDocument();
     expect(menu.querySelector('.m-token-context-menu__token-icon img')).toHaveAttribute(
       'src',
       'https://example.com/alpha.png'

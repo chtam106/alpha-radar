@@ -546,7 +546,9 @@ describe('Home page', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
       timeout: 2500
     });
-    expect(screen.queryByRole('row', { name: 'Open ALPHAUSDT actions menu' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('row', { name: 'Open ALPHAUSDT actions menu' })
+    ).not.toBeInTheDocument();
     expect(getVisibleSymbols()).toEqual(['BETAUSDT']);
   });
 

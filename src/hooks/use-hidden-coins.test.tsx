@@ -10,7 +10,10 @@ describe('useHiddenCoins', () => {
   });
 
   it('normalizes and deduplicates saved symbols', () => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([' btcusdt ', 'BTCUSDT', '', 'ethusdc']));
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([' btcusdt ', 'BTCUSDT', '', 'ethusdc'])
+    );
 
     const { result } = renderHook(() => useHiddenCoins());
 

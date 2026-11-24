@@ -612,7 +612,7 @@ export function HomePage() {
                   <Typography variant="body2" className="p-crypto-dashboard__list-meta">
                     {filtersActive
                       ? `${sortedTokens.length} of ${visibleTokens.length} coins match`
-                        : `${visibleTokens.length} coins match`}
+                      : `${visibleTokens.length} coins match`}
                   </Typography>
                 )}
                 {lastUpdated && (

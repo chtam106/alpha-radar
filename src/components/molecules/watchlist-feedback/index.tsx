@@ -27,9 +27,9 @@ export function WatchlistFeedback({
           ? context === 'watchlist'
             ? 'Watchlist cleared'
             : 'All coins restored to Home'
-        : feedback === 'added'
-          ? 'Added to watchlist'
-          : 'Removed from watchlist';
+          : feedback === 'added'
+            ? 'Added to watchlist'
+            : 'Removed from watchlist';
 
   useEffect(() => {
     if (!confirmed) return;
