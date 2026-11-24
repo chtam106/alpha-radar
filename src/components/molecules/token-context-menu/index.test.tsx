@@ -8,13 +8,15 @@ const token: TokenContextMenuItem = {
   iconUrl: null,
   futuresSymbol: 'ALPHA/USDT',
   coinMarketCapUrl: 'https://coinmarketcap.com/currencies/alpha-token/',
-  isWatchlisted: false
+  isWatchlisted: false,
+  isHidden: false
 };
 
 function renderMenu(props: {
   token: typeof token | null;
   onClose: () => void;
   onToggleWatchlist: () => void;
+  onToggleHidden: () => void;
 }) {
   return render(
     <MemoryRouter initialEntries={['/']}>
@@ -32,7 +34,8 @@ describe('TokenContextMenu', () => {
     const { container, rerender } = renderMenu({
       token,
       onClose: vi.fn(),
-      onToggleWatchlist: vi.fn()
+      onToggleWatchlist: vi.fn(),
+      onToggleHidden: vi.fn()
     });
     expect(screen.getByText('ALPHA')).toBeInTheDocument();
     expect(
@@ -46,6 +49,7 @@ describe('TokenContextMenu', () => {
           anchorPosition={{ top: 100, left: 100 }}
           onClose={vi.fn()}
           onToggleWatchlist={vi.fn()}
+          onToggleHidden={vi.fn()}
           onContextMenuOverlay={vi.fn()}
         />
       </MemoryRouter>
@@ -58,7 +62,8 @@ describe('TokenContextMenu', () => {
   it('only opens with a token and anchor and invokes watchlist actions', async () => {
     const onClose = vi.fn();
     const onToggleWatchlist = vi.fn();
-    const { rerender } = renderMenu({ token: null, onClose, onToggleWatchlist });
+    const onToggleHidden = vi.fn();
+    const { rerender } = renderMenu({ token: null, onClose, onToggleWatchlist, onToggleHidden });
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
 
     rerender(
@@ -68,6 +73,7 @@ describe('TokenContextMenu', () => {
           anchorPosition={{ top: 100, left: 100 }}
           onClose={onClose}
           onToggleWatchlist={onToggleWatchlist}
+          onToggleHidden={onToggleHidden}
           onContextMenuOverlay={vi.fn()}
         />
       </MemoryRouter>
@@ -78,8 +84,42 @@ describe('TokenContextMenu', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
+  it('invokes the hide action and changes its label for hidden coins', async () => {
+    const onToggleHidden = vi.fn();
+    const onClose = vi.fn();
+    const { rerender } = renderMenu({
+      token,
+      onClose,
+      onToggleWatchlist: vi.fn(),
+      onToggleHidden
+    });
+
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Hide from home' }));
+    expect(onToggleHidden).toHaveBeenCalledOnce();
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+
+    rerender(
+      <MemoryRouter initialEntries={['/']}>
+        <TokenContextMenu
+          token={{ ...token, isHidden: true }}
+          anchorPosition={{ top: 100, left: 100 }}
+          onClose={vi.fn()}
+          onToggleWatchlist={vi.fn()}
+          onToggleHidden={vi.fn()}
+          onContextMenuOverlay={vi.fn()}
+        />
+      </MemoryRouter>
+    );
+    expect(await screen.findByRole('menuitem', { name: 'Show on home' })).toBeInTheDocument();
+  });
+
   it('hides the chart action and provides safe external research links', async () => {
-    const { rerender } = renderMenu({ token: null, onClose: vi.fn(), onToggleWatchlist: vi.fn() });
+    const { rerender } = renderMenu({
+      token: null,
+      onClose: vi.fn(),
+      onToggleWatchlist: vi.fn(),
+      onToggleHidden: vi.fn()
+    });
     rerender(
       <MemoryRouter initialEntries={['/']}>
         <TokenContextMenu
@@ -87,6 +127,7 @@ describe('TokenContextMenu', () => {
           anchorPosition={{ top: 100, left: 100 }}
           onClose={vi.fn()}
           onToggleWatchlist={vi.fn()}
+          onToggleHidden={vi.fn()}
           onContextMenuOverlay={vi.fn()}
         />
       </MemoryRouter>

@@ -1,18 +1,35 @@
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { Alert, Dialog, DialogContent, Snackbar } from '@mui/material';
 import { useEffect } from 'react';
-import type { WatchlistFeedback as WatchlistFeedbackState } from '@/hooks/use-watchlist';
-
 const CONFIRMATION_DURATION = 600;
 
 export function WatchlistFeedback({
   feedback,
-  onClose
+  onClose,
+  context = 'watchlist'
 }: {
-  feedback: WatchlistFeedbackState;
+  feedback: 'added' | 'removed' | 'hidden' | 'unhidden' | 'cleared' | 'error' | null;
   onClose: () => void;
+  context?: 'watchlist' | 'home';
 }) {
-  const confirmed = feedback === 'added' || feedback === 'removed';
+  const confirmed =
+    feedback === 'added' ||
+    feedback === 'removed' ||
+    feedback === 'hidden' ||
+    feedback === 'unhidden' ||
+    feedback === 'cleared';
+  const confirmationLabel =
+    feedback === 'hidden'
+      ? 'Hidden from Home'
+      : feedback === 'unhidden'
+        ? 'Restored to Home'
+        : feedback === 'cleared'
+          ? context === 'watchlist'
+            ? 'Watchlist cleared'
+            : 'All coins restored to Home'
+          : feedback === 'added'
+            ? 'Added to watchlist'
+            : 'Removed from watchlist';
 
   useEffect(() => {
     if (!confirmed) return;
@@ -27,7 +44,7 @@ export function WatchlistFeedback({
           open
           slotProps={{
             paper: {
-              'aria-label': feedback === 'added' ? 'Added to watchlist' : 'Removed from watchlist',
+              'aria-label': confirmationLabel,
               'aria-labelledby': undefined
             }
           }}
@@ -39,7 +56,9 @@ export function WatchlistFeedback({
       )}
       <Snackbar open={feedback === 'error'} autoHideDuration={6000} onClose={onClose}>
         <Alert severity="error" onClose={onClose}>
-          Unable to save the watchlist. Please try again.
+          {context === 'watchlist'
+            ? 'Unable to save the watchlist. Please try again.'
+            : 'Unable to update hidden coins. Please try again.'}
         </Alert>
       </Snackbar>
     </>

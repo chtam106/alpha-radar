@@ -24,17 +24,16 @@ export function GlobalHeader() {
           className="o-global-header__nav"
         >
           <NavLink
-            to="/"
-            end
-            className={({ isActive }) => `o-global-header__link${isActive ? ' is-active' : ''}`}
-          >
-            Home
-          </NavLink>
-          <NavLink
             to="/watchlist"
             className={({ isActive }) => `o-global-header__link${isActive ? ' is-active' : ''}`}
           >
             Watchlist
+          </NavLink>
+          <NavLink
+            to="/hidden"
+            className={({ isActive }) => `o-global-header__link${isActive ? ' is-active' : ''}`}
+          >
+            Hidden
           </NavLink>
         </Stack>
       </Container>

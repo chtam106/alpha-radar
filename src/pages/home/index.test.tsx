@@ -532,6 +532,26 @@ describe('Home page', () => {
     });
   });
 
+  it('hides a coin from Home and saves it for the hidden coins route', async () => {
+    fetchBscAlphaTokensMock.mockResolvedValue(tokens);
+    renderHome();
+
+    await screen.findByRole('table');
+    const alphaRow = screen.getByRole('row', { name: 'Open ALPHAUSDT actions menu' });
+    fireEvent.contextMenu(alphaRow, { clientX: 120, clientY: 180 });
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Hide from home' }));
+    expect(screen.getByRole('dialog', { name: 'Hidden from Home' })).toBeVisible();
+
+    expect(window.localStorage.getItem('crypto-dashboard:hidden-coins')).toBe('["ALPHAUSDT"]');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
+      timeout: 2500
+    });
+    expect(
+      screen.queryByRole('row', { name: 'Open ALPHAUSDT actions menu' })
+    ).not.toBeInTheDocument();
+    expect(getVisibleSymbols()).toEqual(['BETAUSDT']);
+  });
+
   it('shows API failures and clears the loading state instead of leaving a blank page', async () => {
     fetchBscAlphaTokensMock.mockRejectedValue(new Error('Binance API returned HTTP 503.'));
     renderHome();

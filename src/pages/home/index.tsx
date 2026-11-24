@@ -23,7 +23,9 @@ import {
   useState,
   useTransition
 } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { useWatchlist } from '@/hooks/use-watchlist';
+import { useHiddenCoins } from '@/hooks/use-hidden-coins';
 import { fetchBscAlphaTokens, type BscAlphaToken } from '@/services/binance-alpha';
 import { getCoinMarketCapUrl } from '@/services/coinmarketcap';
 import { TokenContextMenu } from '@/components/molecules/token-context-menu';
@@ -359,6 +361,14 @@ export function HomePage() {
   const [filterPending, startFilterTransition] = useTransition();
   const [filterLoading, setFilterLoading] = useState<number | null>(null);
   const { isWatchlisted, toggleWatchlist, feedback, clearFeedback } = useWatchlist();
+  const {
+    hiddenCoins,
+    isHidden,
+    hideCoin,
+    unhideCoin,
+    feedback: hiddenCoinsFeedback,
+    clearFeedback: clearHiddenCoinsFeedback
+  } = useHiddenCoins();
   const [contextMenu, setContextMenu] = useState<TokenContextMenuState | null>(null);
   const { totalSupplyFilters, minUnlockFilter, maxUnlockFilter } = filterPreference;
   const filtersActive =
@@ -416,16 +426,20 @@ export function HomePage() {
     }
   }, [filterPreference]);
 
+  const visibleTokens = useMemo(
+    () => tokens.filter((token) => !isHidden(token.futuresSymbol)),
+    [tokens, isHidden]
+  );
   const filteredTokens = useMemo(
     () =>
-      tokens.filter(
+      visibleTokens.filter(
         (token) =>
           token.unlockedPercent >= minUnlockFilter &&
           token.unlockedPercent <= maxUnlockFilter &&
           (totalSupplyFilters.length === 0 ||
             totalSupplyFilters.some((supply) => token.totalSupply === supply))
       ),
-    [tokens, totalSupplyFilters, minUnlockFilter, maxUnlockFilter]
+    [visibleTokens, totalSupplyFilters, minUnlockFilter, maxUnlockFilter]
   );
 
   const sortedTokens = useMemo(
@@ -597,8 +611,8 @@ export function HomePage() {
                 {tokens.length > 0 && (
                   <Typography variant="body2" className="p-crypto-dashboard__list-meta">
                     {filtersActive
-                      ? `${sortedTokens.length} of ${tokens.length} coins match`
-                      : `${tokens.length} coins match`}
+                      ? `${sortedTokens.length} of ${visibleTokens.length} coins match`
+                      : `${visibleTokens.length} coins match`}
                   </Typography>
                 )}
                 {lastUpdated && (
@@ -675,8 +689,13 @@ export function HomePage() {
               <Box className="p-crypto-dashboard__state">
                 <Typography variant="subtitle1">No matching tokens found</Typography>
                 <Typography color="text.secondary">
-                  No tokens match the selected filters.
+                  No visible tokens match the selected filters.
                 </Typography>
+                {hiddenCoins.length > 0 && (
+                  <Button component={RouterLink} to="/hidden" variant="outlined">
+                    Manage hidden coins
+                  </Button>
+                )}
               </Box>
             ) : error ? null : (
               <Box className="p-crypto-dashboard__state">
@@ -695,7 +714,8 @@ export function HomePage() {
                     iconUrl: contextMenu.token.iconUrl,
                     futuresSymbol: contextMenu.token.futuresSymbol,
                     coinMarketCapUrl: getCoinMarketCapUrl(contextMenu.token),
-                    isWatchlisted: isWatchlisted(contextMenu.token.futuresSymbol)
+                    isWatchlisted: isWatchlisted(contextMenu.token.futuresSymbol),
+                    isHidden: isHidden(contextMenu.token.futuresSymbol)
                   }
                 : null
             }
@@ -709,9 +729,24 @@ export function HomePage() {
                 toggleWatchlist(contextMenu.token.futuresSymbol);
               }
             }}
+            onToggleHidden={() => {
+              if (contextMenu) {
+                const symbol = contextMenu.token.futuresSymbol;
+                if (isHidden(symbol)) {
+                  unhideCoin(symbol);
+                } else {
+                  hideCoin(symbol);
+                }
+              }
+            }}
             onContextMenuOverlay={handleContextMenuOnOverlay}
           />
           <WatchlistFeedback feedback={feedback} onClose={clearFeedback} />
+          <WatchlistFeedback
+            feedback={hiddenCoinsFeedback}
+            context="home"
+            onClose={clearHiddenCoinsFeedback}
+          />
           {((refreshKey > 0 && loading) || filterPending || filterLoading !== null) && (
             <Dialog
               open

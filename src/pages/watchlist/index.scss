@@ -17,10 +17,20 @@
     margin-bottom: 8px;
   }
 
+  &__heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   &__refresh {
     border-color: var(--app-accent-border);
     color: var(--app-accent);
     text-transform: none;
+    white-space: nowrap;
+  }
+
+  &__clear-all {
     white-space: nowrap;
   }
 
@@ -65,6 +75,18 @@
     &__heading {
       align-items: flex-start;
       flex-direction: column;
+    }
+
+    &__heading-actions {
+      align-self: stretch;
+      flex-direction: row-reverse;
+      justify-content: flex-start;
+    }
+
+    &__refresh,
+    &__clear-all {
+      flex: 1 1 0;
+      min-width: 0;
     }
   }
 }

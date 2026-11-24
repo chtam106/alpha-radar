@@ -35,6 +35,17 @@ describe('useWatchlist', () => {
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe('[]');
   });
 
+  it('clears all saved symbols', () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(['BTCUSDT', 'ETHUSDT']));
+    const { result } = renderHook(() => useWatchlist());
+
+    act(() => result.current.clearWatchlist());
+
+    expect(result.current.watchlist).toEqual([]);
+    expect(result.current.feedback).toBe('cleared');
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBe('[]');
+  });
+
   it('reports a storage failure without changing the saved watchlist', () => {
     const { result } = renderHook(() => useWatchlist());
     const error = new Error('Storage unavailable');

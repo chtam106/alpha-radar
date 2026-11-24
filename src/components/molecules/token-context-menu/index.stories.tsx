@@ -22,11 +22,13 @@ export const Default: Story = {
       iconUrl: null,
       futuresSymbol: 'BTCUSDT',
       coinMarketCapUrl: 'https://coinmarketcap.com/currencies/bitcoin/',
-      isWatchlisted: true
+      isWatchlisted: true,
+      isHidden: false
     },
     anchorPosition: { top: 120, left: 120 },
     onClose: () => undefined,
     onToggleWatchlist: () => undefined,
+    onToggleHidden: () => undefined,
     onContextMenuOverlay: () => undefined
   },
   decorators: [

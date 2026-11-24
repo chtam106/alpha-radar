@@ -11,6 +11,9 @@ vi.mock('@/pages/home', () => ({ HomePage: () => <div>home page test content</di
 vi.mock('@/pages/watchlist', () => ({
   WatchlistPage: () => <div>watchlist page test content</div>
 }));
+vi.mock('@/pages/hidden', () => ({
+  HiddenCoinsPage: () => <div>hidden coins page test content</div>
+}));
 
 import { AppRoutes } from './app';
 
@@ -57,6 +60,15 @@ describe('application routes', () => {
 
     expect(await screen.findByText('watchlist page test content')).toBeInTheDocument();
     await waitFor(() => expect(document.title).toBe('Watchlist | Alpha Radar'));
+  });
+
+  it('loads Hidden coins through the header navigation', async () => {
+    renderAt('/');
+
+    fireEvent.click(screen.getByRole('link', { name: 'Hidden' }));
+
+    expect(await screen.findByText('hidden coins page test content')).toBeInTheDocument();
+    await waitFor(() => expect(document.title).toBe('Hidden coins | Alpha Radar'));
   });
 
   it('redirects the temporarily hidden chart route to Home', async () => {

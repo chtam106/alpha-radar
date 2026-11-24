@@ -64,8 +64,8 @@ pnpm test -- src/services/binance-alpha/index.test.ts
 Open it in a browser to inspect coverage by file and line. The LCOV report is written to
 `coverage/lcov.info`. CI requires at least 80% statement, line, and function coverage and 70%
 branch coverage. Coverage thresholds are enforced by `pnpm check` and the GitHub Actions `Tests`
-job. Tests cover service parsing and API failures, the CMC proxy Worker, watchlist persistence,
-routing, and interactive Home, Watchlist, and Chart flows.
+job. Tests cover service parsing and API failures, the CMC proxy Worker, watchlist and hidden-coin
+persistence, routing, and interactive Home, Watchlist, Hidden, and Chart flows.
 
 GitHub Actions also runs TypeScript, ESLint, Stylelint, and Prettier checks for pull requests
 targeting `master`.
