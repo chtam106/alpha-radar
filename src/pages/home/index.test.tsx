@@ -550,6 +550,15 @@ describe('Home page', () => {
       screen.queryByRole('row', { name: 'Open ALPHAUSDT actions menu' })
     ).not.toBeInTheDocument();
     expect(getVisibleSymbols()).toEqual(['BETAUSDT']);
+    expect(screen.getByRole('link', { name: '1 coin hidden' })).toHaveAttribute('href', '/hidden');
+  });
+
+  it('does not show a hidden count when no coins are hidden', async () => {
+    fetchBscAlphaTokensMock.mockResolvedValue(tokens);
+    renderHome();
+
+    await screen.findByRole('table');
+    expect(screen.queryByRole('link', { name: /hidden/ })).not.toBeInTheDocument();
   });
 
   it('shows API failures and clears the loading state instead of leaving a blank page', async () => {

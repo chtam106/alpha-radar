@@ -42,6 +42,11 @@ function readHiddenCoins(): string[] {
   }
 }
 
+// Browsers only fire `storage` in other tabs, so tell other hook instances in this tab too.
+function notifySameTab(newValue: string) {
+  window.dispatchEvent(new StorageEvent('storage', { key: HIDDEN_COINS_STORAGE_KEY, newValue }));
+}
+
 export function useHiddenCoins() {
   const [hiddenCoins, setHiddenCoins] = useState(readHiddenCoins);
   const hiddenCoinsRef = useRef(hiddenCoins);
@@ -80,8 +85,9 @@ export function useHiddenCoins() {
       ? [...hiddenCoinsRef.current, normalizedSymbol]
       : hiddenCoinsRef.current.filter((symbol) => symbol !== normalizedSymbol);
 
+    const serializedHiddenCoins = JSON.stringify(nextHiddenCoins);
     try {
-      window.localStorage.setItem(HIDDEN_COINS_STORAGE_KEY, JSON.stringify(nextHiddenCoins));
+      window.localStorage.setItem(HIDDEN_COINS_STORAGE_KEY, serializedHiddenCoins);
     } catch (storageError) {
       console.error('Unable to save the hidden coins.', storageError);
       setFeedback('error');
@@ -91,6 +97,7 @@ export function useHiddenCoins() {
     hiddenCoinsRef.current = nextHiddenCoins;
     setHiddenCoins(nextHiddenCoins);
     setFeedback(hide ? 'hidden' : 'unhidden');
+    notifySameTab(serializedHiddenCoins);
   }, []);
 
   const hideCoin = useCallback(
@@ -115,6 +122,7 @@ export function useHiddenCoins() {
     hiddenCoinsRef.current = [];
     setHiddenCoins([]);
     setFeedback('cleared');
+    notifySameTab('[]');
   }, []);
   const clearFeedback = useCallback(() => setFeedback(null), []);
 

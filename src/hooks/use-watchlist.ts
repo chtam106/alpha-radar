@@ -46,6 +46,11 @@ function readWatchlist(): string[] {
   }
 }
 
+// Browsers only fire `storage` in other tabs, so tell other hook instances in this tab too.
+function notifySameTab(newValue: string) {
+  window.dispatchEvent(new StorageEvent('storage', { key: WATCHLIST_STORAGE_KEY, newValue }));
+}
+
 export function useWatchlist() {
   const [watchlist, setWatchlist] = useState(readWatchlist);
   const watchlistRef = useRef(watchlist);
@@ -83,8 +88,9 @@ export function useWatchlist() {
     const nextWatchlist = removing
       ? watchlistRef.current.filter((symbol) => symbol !== normalizedSymbol)
       : [...watchlistRef.current, normalizedSymbol];
+    const serializedWatchlist = JSON.stringify(nextWatchlist);
     try {
-      window.localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(nextWatchlist));
+      window.localStorage.setItem(WATCHLIST_STORAGE_KEY, serializedWatchlist);
     } catch (error) {
       console.error('Unable to save the watchlist.', error);
       setFeedback('error');
@@ -94,6 +100,7 @@ export function useWatchlist() {
     watchlistRef.current = nextWatchlist;
     setWatchlist(nextWatchlist);
     setFeedback(removing ? 'removed' : 'added');
+    notifySameTab(serializedWatchlist);
   }, []);
   const clearWatchlist = useCallback(() => {
     if (watchlistRef.current.length === 0) return;
@@ -109,6 +116,7 @@ export function useWatchlist() {
     watchlistRef.current = [];
     setWatchlist([]);
     setFeedback('cleared');
+    notifySameTab('[]');
   }, []);
   const clearFeedback = useCallback(() => setFeedback(null), []);
 

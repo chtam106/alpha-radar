@@ -61,6 +61,30 @@
     }
   }
 
+  &__count {
+    display: inline-flex;
+    min-width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 10%);
+    color: #dce5eb;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+
+    .o-global-header__link:hover &,
+    .o-global-header__link:focus-visible &,
+    .o-global-header__link.is-active & {
+      background: var(--app-accent);
+      color: #0b0e11;
+    }
+  }
+
   @media (width <= 600px) {
     &__inner {
       gap: 8px;
