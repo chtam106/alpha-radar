@@ -9,6 +9,7 @@ import {
   Container,
   Dialog,
   DialogContent,
+  Link as MuiLink,
   Slider,
   Stack,
   Typography
@@ -430,16 +431,21 @@ export function HomePage() {
     () => tokens.filter((token) => !isHidden(token.futuresSymbol)),
     [tokens, isHidden]
   );
+  const matchesFilters = useCallback(
+    (token: BscAlphaToken) =>
+      token.unlockedPercent >= minUnlockFilter &&
+      token.unlockedPercent <= maxUnlockFilter &&
+      (totalSupplyFilters.length === 0 ||
+        totalSupplyFilters.some((supply) => token.totalSupply === supply)),
+    [totalSupplyFilters, minUnlockFilter, maxUnlockFilter]
+  );
   const filteredTokens = useMemo(
-    () =>
-      visibleTokens.filter(
-        (token) =>
-          token.unlockedPercent >= minUnlockFilter &&
-          token.unlockedPercent <= maxUnlockFilter &&
-          (totalSupplyFilters.length === 0 ||
-            totalSupplyFilters.some((supply) => token.totalSupply === supply))
-      ),
-    [visibleTokens, totalSupplyFilters, minUnlockFilter, maxUnlockFilter]
+    () => visibleTokens.filter(matchesFilters),
+    [visibleTokens, matchesFilters]
+  );
+  const hiddenMatchCount = useMemo(
+    () => tokens.filter((token) => isHidden(token.futuresSymbol) && matchesFilters(token)).length,
+    [tokens, isHidden, matchesFilters]
   );
 
   const sortedTokens = useMemo(
@@ -614,6 +620,17 @@ export function HomePage() {
                       ? `${sortedTokens.length} of ${visibleTokens.length} coins match`
                       : `${visibleTokens.length} coins match`}
                   </Typography>
+                )}
+                {hiddenMatchCount > 0 && (
+                  <MuiLink
+                    component={RouterLink}
+                    to="/hidden"
+                    variant="body2"
+                    color="text.secondary"
+                    className="p-crypto-dashboard__list-meta p-crypto-dashboard__hidden-count"
+                  >
+                    {hiddenMatchCount === 1 ? '1 coin hidden' : `${hiddenMatchCount} coins hidden`}
+                  </MuiLink>
                 )}
                 {lastUpdated && (
                   <Typography

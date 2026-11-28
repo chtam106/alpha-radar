@@ -53,6 +53,18 @@
     font-variant-numeric: tabular-nums;
   }
 
+  &__hidden-count {
+    color: #8fa0ad;
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: #dce5eb;
+      text-decoration: underline;
+    }
+  }
+
   &__list-status {
     display: flex;
     align-items: center;
